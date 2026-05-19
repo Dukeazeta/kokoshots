@@ -16,11 +16,13 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final _searchController = TextEditingController();
   final _chatController = TextEditingController();
   int _tabIndex = 0;
 
   @override
   void dispose() {
+    _searchController.dispose();
     _chatController.dispose();
     super.dispose();
   }
@@ -29,6 +31,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final controller = ref.watch(appControllerProvider);
     final textTheme = Theme.of(context).textTheme;
+    if (_searchController.text != controller.query) {
+      _searchController.value = TextEditingValue(
+        text: controller.query,
+        selection: TextSelection.collapsed(offset: controller.query.length),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -53,6 +61,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
                     child: TextField(
+                      controller: _searchController,
                       onChanged: controller.setQuery,
                       decoration: const InputDecoration(
                         labelText: 'Search screenshots',
@@ -61,6 +70,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
+                  if (controller.categories.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 38,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        scrollDirection: Axis.horizontal,
+                        itemCount: controller.categories.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final category = controller.categories[index];
+                          return ActionChip(
+                            onPressed: () {
+                              _searchController.text = category.key;
+                              controller.setQuery(category.key);
+                            },
+                            label: Text('${category.key} ${category.value}'),
+                            backgroundColor: controller.query == category.key
+                                ? KokoColors.black
+                                : KokoColors.cream,
+                            labelStyle: TextStyle(
+                              color: controller.query == category.key
+                                  ? KokoColors.white
+                                  : KokoColors.black,
+                            ),
+                            side: const BorderSide(color: KokoColors.line),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -466,26 +510,38 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 42, color: KokoColors.orange),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text(
-              body,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const padding = 28.0;
+        final minHeight = constraints.maxHeight > padding * 2
+            ? constraints.maxHeight - padding * 2
+            : 0.0;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(padding),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 42, color: KokoColors.orange),
+                  const SizedBox(height: 16),
+                  Text(title, style: Theme.of(context).textTheme.titleLarge),
+                  const SizedBox(height: 8),
+                  Text(
+                    body,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                  const SizedBox(height: 18),
+                  FilledButton(onPressed: onAction, child: Text(actionLabel)),
+                ],
+              ),
             ),
-            const SizedBox(height: 18),
-            FilledButton(onPressed: onAction, child: Text(actionLabel)),
-          ],
+          ),
         ),
-      ),
+      },
     );
   }
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -43,6 +45,7 @@ class AppController extends ChangeNotifier {
   final MediaService _media;
   final GeminiService _gemini;
   final _uuid = const Uuid();
+  Timer? _pollTimer;
 
   List<ScreenshotItem> _screenshots;
   List<ChatMessage> _messages;
@@ -72,6 +75,21 @@ class AppController extends ChangeNotifier {
   int get processedCount =>
       _screenshots.where((item) => item.isProcessed).length;
   int get pendingCount => _screenshots.length - processedCount;
+  List<MapEntry<String, int>> get categories {
+    final counts = <String, int>{};
+    for (final item in _screenshots) {
+      for (final tag in item.tags) {
+        if (tag == 'queued' || tag == 'needs-key') continue;
+        counts[tag] = (counts[tag] ?? 0) + 1;
+      }
+    }
+    final entries = counts.entries.toList()
+      ..sort((a, b) {
+        final byCount = b.value.compareTo(a.value);
+        return byCount == 0 ? a.key.compareTo(b.key) : byCount;
+      });
+    return entries.take(12).toList(growable: false);
+  }
 
   Future<void> initialize() async {
     _isLoading = true;
@@ -82,12 +100,22 @@ class AppController extends ChangeNotifier {
     _statusText = _screenshots.isEmpty
         ? 'No screenshots indexed yet'
         : '${_screenshots.length} screenshots indexed';
+    _startPolling();
     notifyListeners();
+    if (_screenshots.isEmpty) {
+      unawaited(requestPermissionAndScan());
+    }
   }
 
   void setQuery(String value) {
     _query = value;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> requestPermissionAndScan() async {
@@ -159,6 +187,16 @@ class AppController extends ChangeNotifier {
       _isScanning = false;
       notifyListeners();
     }
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
+      if (_isScanning) return;
+      if (_permission?.isAuth == true || _permission?.hasAccess == true) {
+        await scanScreenshots();
+      }
+    });
   }
 
   Future<void> analyzePending() async {

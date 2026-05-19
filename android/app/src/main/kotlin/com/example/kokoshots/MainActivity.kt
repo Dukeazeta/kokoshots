@@ -1,4 +1,4 @@
-package com.example.kokoshots
+package com.kokoshots.app
 
 import io.flutter.embedding.android.FlutterActivity
 
