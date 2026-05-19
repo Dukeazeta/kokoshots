@@ -53,6 +53,7 @@ class AppController extends ChangeNotifier {
   String _statusText;
   bool _isLoading;
   bool _isScanning = false;
+  bool _isThinking = false;
   int _processedThisRun = 0;
   int _discoveredThisRun = 0;
   PermissionState? _permission;
@@ -63,6 +64,7 @@ class AppController extends ChangeNotifier {
   String get statusText => _statusText;
   bool get isLoading => _isLoading;
   bool get isScanning => _isScanning;
+  bool get isThinking => _isThinking;
   int get processedThisRun => _processedThisRun;
   int get discoveredThisRun => _discoveredThisRun;
   PermissionState? get permission => _permission;
@@ -241,19 +243,23 @@ class AppController extends ChangeNotifier {
     await _database.addChatMessage(userMessage);
     _messages = [..._messages, userMessage];
     _query = trimmed;
+    _isThinking = true;
     notifyListeners();
 
     final matches = filteredScreenshots;
+    final matchedIds = matches.take(8).map((m) => m.assetId).toList();
     final reply = await _gemini.buildSearchReply(
       question: trimmed,
       localMatches: matches,
       totalIndexed: _screenshots.length,
     );
+    _isThinking = false;
     final assistantMessage = ChatMessage(
       id: _uuid.v4(),
       role: 'assistant',
       text: reply,
       createdAt: DateTime.now(),
+      matchedAssetIds: matchedIds.isNotEmpty ? matchedIds : null,
     );
     await _database.addChatMessage(assistantMessage);
     _messages = [..._messages, assistantMessage];

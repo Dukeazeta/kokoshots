@@ -5,6 +5,7 @@ import '../controllers/app_controller.dart';
 import '../services/gemini_service.dart';
 import '../theme/app_theme.dart';
 
+/// Settings tab — API config, scan controls, indexing stats.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -12,63 +13,138 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(appControllerProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Setup')),
-      body: ListView(
-        padding: const EdgeInsets.all(18),
+    return SafeArea(
+      bottom: false,
+      child: ListView(
+        padding: EdgeInsets.fromLTRB(
+          KokoSpacing.xl,
+          KokoSpacing.lg,
+          KokoSpacing.xl,
+          MediaQuery.of(context).padding.bottom + 100, // clear floating navbar
+        ),
         children: [
-          _SetupCard(
+          // ── Header ──
+          const Text(
+            'Settings',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 24,
+              fontWeight: FontWeight.w500,
+              letterSpacing: -0.4,
+              color: KokoColors.ink,
+            ),
+          ),
+          const SizedBox(height: KokoSpacing.xl),
+
+          // ── Indexing stats ──
+          _StatsRow(controller: controller),
+          const SizedBox(height: KokoSpacing.lg),
+
+          // ── Scan progress ──
+          if (controller.isScanning) ...[
+            ClipRRect(
+              borderRadius: KokoRadius.smBorder,
+              child: LinearProgressIndicator(
+                minHeight: 3,
+                backgroundColor: KokoColors.canvasSoft,
+                valueColor: const AlwaysStoppedAnimation(KokoColors.ink),
+              ),
+            ),
+            const SizedBox(height: KokoSpacing.sm),
+            Text(
+              controller.statusText,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: KokoColors.mute,
+              ),
+            ),
+            const SizedBox(height: KokoSpacing.lg),
+          ],
+
+          // ── Action buttons ──
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: controller.isScanning
+                      ? null
+                      : controller.requestPermissionAndScan,
+                  icon: controller.isScanning
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: KokoColors.onPrimary,
+                          ),
+                        )
+                      : const Icon(Icons.auto_awesome_motion, size: 18),
+                  label: Text(controller.isScanning ? 'Scanning...' : 'Scan'),
+                ),
+              ),
+              const SizedBox(width: KokoSpacing.sm),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: controller.geminiConfigured
+                      ? controller.analyzePending
+                      : null,
+                  icon: const Icon(Icons.auto_fix_high, size: 18),
+                  label: const Text('Analyze'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: KokoSpacing.xxl),
+
+          // ── Config cards ──
+          _ConfigCard(
             title: 'Gemini API key',
-            status: controller.geminiConfigured
-                ? 'Configured'
-                : 'Needs attention',
+            status: controller.geminiConfigured ? 'Active' : 'Required',
             body:
-                'Build or run the app with --dart-define=GEMINI_API_KEY=your_key. The current app keeps local indexing available even before this is set.',
+                'Run with --dart-define=GEMINI_API_KEY=your_key to enable AI descriptions.',
             good: controller.geminiConfigured,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: KokoSpacing.sm),
           _CodeBlock(
             text:
-                'flutter run --dart-define=GEMINI_API_KEY=your_key_here\nflutter build apk --dart-define=GEMINI_API_KEY=your_key_here',
+                'flutter run --dart-define=GEMINI_API_KEY=your_key_here',
           ),
-          const SizedBox(height: 12),
-          _SetupCard(
+          const SizedBox(height: KokoSpacing.lg),
+          _ConfigCard(
             title: 'Gemini model',
             status: GeminiService.model,
             body:
-                'Optional override: --dart-define=GEMINI_MODEL=gemini-2.0-flash. Keep the default unless you have a specific model preference.',
+                'Override with --dart-define=GEMINI_MODEL=gemini-2.0-flash if needed.',
             good: true,
           ),
-          const SizedBox(height: 12),
-          _SetupCard(
+          const SizedBox(height: KokoSpacing.lg),
+          _ConfigCard(
             title: 'Photo permission',
             status: controller.permission == null
                 ? 'Requested on scan'
                 : controller.permission.toString(),
             body:
-                'Android will ask for photo access the first time you tap Scan. Choose Allow so KokoShots can index screenshots.',
+                'Android will ask for photo access when you first scan. Choose Allow.',
             good: true,
           ),
-          const SizedBox(height: 12),
-          _SetupCard(
-            title: 'Release signing',
-            status: 'Needs attention before Play Store release',
-            body:
-                'The project currently uses debug signing for release builds. Add a real upload keystore before publishing.',
-            good: false,
+          const SizedBox(height: KokoSpacing.xxl),
+
+          // ── Danger zone ──
+          const Text(
+            'DATA',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.8,
+              color: KokoColors.mute,
+            ),
           ),
-          const SizedBox(height: 18),
-          OutlinedButton.icon(
-            onPressed: controller.geminiConfigured
-                ? controller.analyzePending
-                : null,
-            icon: const Icon(Icons.auto_fix_high),
-            label: const Text('Analyze pending screenshots'),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: KokoSpacing.md),
           OutlinedButton.icon(
             onPressed: controller.clearChat,
-            icon: const Icon(Icons.delete_outline),
+            icon: const Icon(Icons.delete_outline, size: 18),
             label: const Text('Clear chat history'),
           ),
         ],
@@ -77,8 +153,86 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _SetupCard extends StatelessWidget {
-  const _SetupCard({
+// ── Stats row ──
+
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.controller});
+
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _StatTile(
+          label: 'INDEXED',
+          value: controller.screenshots.length.toString(),
+        ),
+        const SizedBox(width: KokoSpacing.sm),
+        _StatTile(
+          label: 'ANALYZED',
+          value: controller.processedCount.toString(),
+        ),
+        const SizedBox(width: KokoSpacing.sm),
+        _StatTile(
+          label: 'PENDING',
+          value: controller.pendingCount.toString(),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(KokoSpacing.lg),
+        decoration: BoxDecoration(
+          color: KokoColors.canvasSoft,
+          borderRadius: KokoRadius.mdBorder,
+          border: Border.all(color: KokoColors.hairline),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                color: KokoColors.ink,
+              ),
+            ),
+            const SizedBox(height: KokoSpacing.xxs),
+            Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.6,
+                color: KokoColors.mute,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Config card ──
+
+class _ConfigCard extends StatelessWidget {
+  const _ConfigCard({
     required this.title,
     required this.status,
     required this.body,
@@ -92,47 +246,68 @@ class _SetupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleLarge,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(KokoSpacing.lg),
+      decoration: BoxDecoration(
+        color: KokoColors.canvasSoft,
+        borderRadius: KokoRadius.mdBorder,
+        border: Border.all(color: KokoColors.hairline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: KokoColors.ink,
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: good ? KokoColors.cream : KokoColors.orange,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      color: good ? KokoColors.black : KokoColors.white,
-                      fontSize: 12,
-                    ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: KokoSpacing.md,
+                  vertical: KokoSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: good ? KokoColors.ink : KokoColors.warning,
+                  borderRadius: KokoRadius.smBorder,
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: good ? KokoColors.onPrimary : KokoColors.canvas,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: KokoSpacing.md),
+          Text(
+            body,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14,
+              color: KokoColors.body,
+              height: 1.5,
             ),
-            const SizedBox(height: 10),
-            Text(body, style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// ── Code block ──
 
 class _CodeBlock extends StatelessWidget {
   const _CodeBlock({required this.text});
@@ -143,16 +318,18 @@ class _CodeBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(KokoSpacing.lg),
       decoration: BoxDecoration(
-        color: KokoColors.black,
-        borderRadius: BorderRadius.circular(3),
+        color: KokoColors.canvas,
+        borderRadius: KokoRadius.mdBorder,
+        border: Border.all(color: KokoColors.hairline),
       ),
       child: Text(
         text,
         style: const TextStyle(
-          color: KokoColors.cream,
           fontFamily: 'monospace',
+          fontSize: 13,
+          color: KokoColors.bodyStrong,
           height: 1.5,
         ),
       ),

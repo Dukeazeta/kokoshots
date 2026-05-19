@@ -14,7 +14,7 @@ class DatabaseService {
     final dbPath = await getDatabasesPath();
     final database = await openDatabase(
       p.join(dbPath, 'kokoshots.db'),
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE screenshots (
@@ -36,7 +36,8 @@ class DatabaseService {
             id TEXT PRIMARY KEY,
             role TEXT NOT NULL,
             text TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            matched_asset_ids TEXT
           )
         ''');
         await db.execute(
@@ -45,6 +46,14 @@ class DatabaseService {
         await db.execute(
           'CREATE INDEX screenshots_status_idx ON screenshots(status)',
         );
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          // Add the matched_asset_ids column to existing chat_messages table
+          await db.execute(
+            'ALTER TABLE chat_messages ADD COLUMN matched_asset_ids TEXT',
+          );
+        }
       },
     );
     _database = database;

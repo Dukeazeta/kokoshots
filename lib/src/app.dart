@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
-import 'screens/home_screen.dart';
-import 'screens/settings_screen.dart';
+import 'screens/app_shell.dart';
 import 'theme/app_theme.dart';
 
 class KokoShotsApp extends StatelessWidget {
@@ -10,22 +8,11 @@ class KokoShotsApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
+    return MaterialApp(
       title: 'KokoShots',
       debugShowCheckedModeBanner: false,
       theme: buildKokoTheme(),
-      routerConfig: _router,
+      home: const AppShell(),
     );
   }
 }
-
-final _router = GoRouter(
-  initialLocation: '/',
-  routes: [
-    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-    GoRoute(
-      path: '/settings',
-      builder: (context, state) => const SettingsScreen(),
-    ),
-  ],
-);

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../controllers/app_controller.dart';
-import '../models/chat_message.dart';
 import '../models/screenshot_item.dart';
 import '../theme/app_theme.dart';
 import '../widgets/screenshot_tile.dart';
+import '../widgets/shimmer_tile.dart';
 
+/// Minimal grid-first home screen with date-grouped sections,
+/// shimmer loading, and staggered reveal animation.
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -17,20 +19,19 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
-  final _chatController = TextEditingController();
-  int _tabIndex = 0;
+  bool _searchVisible = false;
 
   @override
   void dispose() {
     _searchController.dispose();
-    _chatController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = ref.watch(appControllerProvider);
-    final textTheme = Theme.of(context).textTheme;
+
+    // Sync the search field with controller query
     if (_searchController.text != controller.query) {
       _searchController.value = TextEditingValue(
         text: controller.query,
@@ -38,232 +39,215 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('KokoShots'),
-        actions: [
-          IconButton(
-            tooltip: 'Settings',
-            onPressed: () => context.go('/settings'),
-            icon: const Icon(Icons.tune),
+    if (controller.isLoading) {
+      return const _ShimmerLoadingView();
+    }
+
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        children: [
+          // ── Header ──
+          _Header(
+            searchVisible: _searchVisible,
+            onSearchToggle: () =>
+                setState(() => _searchVisible = !_searchVisible),
+            isScanning: controller.isScanning,
           ),
-        ],
-      ),
-      body: controller.isLoading
-          ? const _LoadingView()
-          : SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 6, 18, 12),
-                    child: _HeroPanel(controller: controller),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: TextField(
-                      controller: _searchController,
-                      onChanged: controller.setQuery,
-                      decoration: const InputDecoration(
-                        labelText: 'Search screenshots',
-                        hintText: 'receipt, map, chat, code, bank app',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                    ),
-                  ),
-                  if (controller.categories.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 38,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        scrollDirection: Axis.horizontal,
-                        itemCount: controller.categories.length,
-                        separatorBuilder: (context, index) =>
-                            const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final category = controller.categories[index];
-                          return ActionChip(
-                            onPressed: () {
-                              _searchController.text = category.key;
-                              controller.setQuery(category.key);
-                            },
-                            label: Text('${category.key} ${category.value}'),
-                            backgroundColor: controller.query == category.key
-                                ? KokoColors.black
-                                : KokoColors.cream,
-                            labelStyle: TextStyle(
-                              color: controller.query == category.key
-                                  ? KokoColors.white
-                                  : KokoColors.black,
-                            ),
-                            side: const BorderSide(color: KokoColors.line),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _SegmentButton(
-                            selected: _tabIndex == 0,
-                            icon: Icons.grid_view,
-                            label: 'Library',
-                            onTap: () => setState(() => _tabIndex = 0),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _SegmentButton(
-                            selected: _tabIndex == 1,
-                            icon: Icons.forum_outlined,
-                            label: 'Chat',
-                            onTap: () => setState(() => _tabIndex = 1),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 220),
-                      child: _tabIndex == 0
-                          ? _LibraryView(
-                              key: const ValueKey('library'),
-                              items: controller.filteredScreenshots,
-                              controller: controller,
-                            )
-                          : _ChatView(
-                              key: const ValueKey('chat'),
-                              messages: controller.messages,
-                              controller: controller,
-                              textController: _chatController,
-                            ),
-                    ),
-                  ),
-                ],
+
+          // ── Scan progress bar (thin, auto-hides) ──
+          if (controller.isScanning)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: KokoSpacing.xl),
+              child: ClipRRect(
+                borderRadius: KokoRadius.smBorder,
+                child: LinearProgressIndicator(
+                  minHeight: 3,
+                  backgroundColor: KokoColors.canvasSoft,
+                  valueColor:
+                      const AlwaysStoppedAnimation(KokoColors.ink),
+                ),
               ),
             ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: KokoColors.ivory,
-          border: Border(top: BorderSide(color: KokoColors.line)),
-        ),
-        padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                controller.statusText,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: textTheme.bodyMedium,
+
+          // ── Search field ──
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                KokoSpacing.xl, KokoSpacing.sm, KokoSpacing.xl, 0,
+              ),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                onChanged: controller.setQuery,
+                style: const TextStyle(
+                  color: KokoColors.ink,
+                  fontSize: 14,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Search screenshots...',
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    size: 20,
+                    color: KokoColors.mute,
+                  ),
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                            controller.setQuery('');
+                          },
+                          child: const Icon(
+                            Icons.close,
+                            size: 18,
+                            color: KokoColors.mute,
+                          ),
+                        )
+                      : null,
+                ),
               ),
             ),
-            const SizedBox(width: 12),
-            FilledButton.icon(
-              onPressed: controller.isScanning
-                  ? null
-                  : controller.requestPermissionAndScan,
-              icon: controller.isScanning
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.auto_awesome_motion),
-              label: Text(controller.isScanning ? 'Indexing' : 'Scan'),
+            crossFadeState: _searchVisible
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 220),
+          ),
+
+          // ── Category chips ──
+          if (controller.categories.isNotEmpty) ...[
+            const SizedBox(height: KokoSpacing.md),
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: KokoSpacing.xl),
+                scrollDirection: Axis.horizontal,
+                itemCount: controller.categories.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: KokoSpacing.sm),
+                itemBuilder: (context, index) {
+                  final category = controller.categories[index];
+                  final isActive = controller.query == category.key;
+                  return GestureDetector(
+                    onTap: () {
+                      if (isActive) {
+                        _searchController.clear();
+                        controller.setQuery('');
+                      } else {
+                        _searchController.text = category.key;
+                        controller.setQuery(category.key);
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: KokoSpacing.lg,
+                        vertical: KokoSpacing.sm,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? KokoColors.ink
+                            : KokoColors.canvasSoft,
+                        borderRadius: KokoRadius.smBorder,
+                        border: Border.all(
+                          color: isActive
+                              ? KokoColors.ink
+                              : KokoColors.hairline,
+                        ),
+                      ),
+                      child: Text(
+                        '${category.key} ${category.value}',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isActive
+                              ? KokoColors.onPrimary
+                              : KokoColors.body,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ],
-        ),
+
+          const SizedBox(height: KokoSpacing.md),
+
+          // ── Image grid with date headers ──
+          Expanded(
+            child: controller.filteredScreenshots.isEmpty
+                ? _EmptyLibrary(
+                    hasScreenshots: controller.screenshots.isNotEmpty,
+                    onScan: controller.requestPermissionAndScan,
+                  )
+                : _DateGroupedGrid(
+                    items: controller.filteredScreenshots,
+                    onRefresh: controller.scanScreenshots,
+                  ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _HeroPanel extends StatelessWidget {
-  const _HeroPanel({required this.controller});
+// ── Header ──
 
-  final AppController controller;
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.searchVisible,
+    required this.onSearchToggle,
+    required this.isScanning,
+  });
+
+  final bool searchVisible;
+  final VoidCallback onSearchToggle;
+  final bool isScanning;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final progress = controller.screenshots.isEmpty
-        ? 0.0
-        : controller.processedCount / controller.screenshots.length;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: KokoColors.cream,
-        border: Border.all(color: KokoColors.line),
-        borderRadius: BorderRadius.circular(3),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1f7f6315),
-            offset: Offset(-8, 16),
-            blurRadius: 39,
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        KokoSpacing.xl, KokoSpacing.lg, KokoSpacing.xl, KokoSpacing.sm,
       ),
-      child: Stack(
+      child: Row(
         children: [
-          Positioned(right: -24, top: -16, child: _KokoMark(size: 118)),
-          Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('SCREENSHOT MEMORY', style: textTheme.labelLarge),
-                const SizedBox(height: 10),
-                Text(
-                  'Find the screenshot you meant to save.',
-                  style: textTheme.headlineMedium,
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    _Metric(
-                      label: 'Indexed',
-                      value: controller.screenshots.length.toString(),
-                    ),
-                    const SizedBox(width: 10),
-                    _Metric(
-                      label: 'Analyzed',
-                      value: controller.processedCount.toString(),
-                    ),
-                    const SizedBox(width: 10),
-                    _Metric(
-                      label: 'Pending',
-                      value: controller.pendingCount.toString(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(2),
-                  child: LinearProgressIndicator(
-                    minHeight: 6,
-                    value: progress == 0 ? null : progress,
-                    backgroundColor: KokoColors.ivory,
-                    valueColor: const AlwaysStoppedAnimation(KokoColors.orange),
-                  ),
-                ),
-                if (!controller.geminiConfigured) ...[
-                  const SizedBox(height: 12),
-                  Text(
-                    'Gemini API key is not set. Local indexing works now; AI descriptions unlock after you add the key.',
-                    style: textTheme.bodyMedium,
-                  ),
-                ],
-              ],
+          const Expanded(
+            child: Text(
+              'KokoShots',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.4,
+                color: KokoColors.ink,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onSearchToggle,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: searchVisible
+                    ? KokoColors.ink
+                    : KokoColors.canvasSoft,
+                borderRadius: KokoRadius.pillBorder,
+                border: Border.all(color: KokoColors.hairline),
+              ),
+              child: Icon(
+                searchVisible ? Icons.close : Icons.search,
+                size: 18,
+                color: searchVisible
+                    ? KokoColors.onPrimary
+                    : KokoColors.ink,
+              ),
             ),
           ),
         ],
@@ -272,333 +256,301 @@ class _HeroPanel extends StatelessWidget {
   }
 }
 
-class _LibraryView extends StatelessWidget {
-  const _LibraryView({
-    super.key,
+// ── Date-grouped grid using CustomScrollView ──
+
+class _DateGroupedGrid extends StatelessWidget {
+  const _DateGroupedGrid({
     required this.items,
-    required this.controller,
+    required this.onRefresh,
   });
 
   final List<ScreenshotItem> items;
-  final AppController controller;
+  final Future<void> Function() onRefresh;
+
+  /// Groups items by calendar day and returns (label, items) pairs.
+  List<_DateGroup> _buildGroups() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final groups = <_DateGroup>[];
+    String? currentKey;
+    List<ScreenshotItem> currentItems = [];
+
+    for (final item in items) {
+      final date = DateTime(
+        item.dateTaken.year,
+        item.dateTaken.month,
+        item.dateTaken.day,
+      );
+
+      String label;
+      if (date == today) {
+        label = 'Today';
+      } else if (date == yesterday) {
+        label = 'Yesterday';
+      } else if (date.isAfter(today.subtract(const Duration(days: 7)))) {
+        label = DateFormat.EEEE().format(item.dateTaken); // "Monday", etc.
+      } else if (date.year == now.year) {
+        label = DateFormat.MMMd().format(item.dateTaken); // "May 15"
+      } else {
+        label = DateFormat.yMMMd().format(item.dateTaken); // "May 15, 2025"
+      }
+
+      if (label != currentKey) {
+        if (currentItems.isNotEmpty) {
+          groups.add(_DateGroup(label: currentKey!, items: currentItems));
+        }
+        currentKey = label;
+        currentItems = [item];
+      } else {
+        currentItems.add(item);
+      }
+    }
+    if (currentItems.isNotEmpty && currentKey != null) {
+      groups.add(_DateGroup(label: currentKey, items: currentItems));
+    }
+    return groups;
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return _EmptyState(
-        icon: Icons.photo_library_outlined,
-        title: 'No screenshots indexed',
-        body: 'Tap Scan to grant photo access and build your local library.',
-        actionLabel: 'Scan screenshots',
-        onAction: controller.requestPermissionAndScan,
-      );
-    }
+    final groups = _buildGroups();
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     return RefreshIndicator(
-      onRefresh: controller.scanScreenshots,
-      child: GridView.builder(
-        padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: .72,
-        ),
-        itemCount: items.length,
-        itemBuilder: (context, index) => ScreenshotTile(item: items[index]),
-      ),
-    );
-  }
-}
-
-class _ChatView extends StatelessWidget {
-  const _ChatView({
-    super.key,
-    required this.messages,
-    required this.controller,
-    required this.textController,
-  });
-
-  final List<ChatMessage> messages;
-  final AppController controller;
-  final TextEditingController textController;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: messages.isEmpty
-              ? _EmptyState(
-                  icon: Icons.question_answer_outlined,
-                  title: 'Ask for a screenshot',
-                  body:
-                      'Try: "receipts from last month" or "screenshots of maps".',
-                  actionLabel: 'Use sample prompt',
-                  onAction: () {
-                    textController.text = 'Find receipts from last month';
-                  },
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(18, 4, 18, 16),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isUser = message.role == 'user';
-                    return Align(
-                      alignment: isUser
-                          ? Alignment.centerRight
-                          : Alignment.centerLeft,
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 310),
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: isUser ? KokoColors.black : KokoColors.white,
-                          borderRadius: BorderRadius.circular(3),
-                          border: Border.all(
-                            color: isUser ? KokoColors.black : KokoColors.line,
-                          ),
-                        ),
-                        child: Text(
-                          message.text,
-                          style: TextStyle(
-                            color: isUser ? KokoColors.white : KokoColors.black,
-                            height: 1.35,
-                          ),
-                        ),
+      onRefresh: onRefresh,
+      color: KokoColors.ink,
+      backgroundColor: KokoColors.canvasSoft,
+      child: CustomScrollView(
+        slivers: [
+          for (final group in groups) ...[
+            // Date header
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  KokoSpacing.xl, KokoSpacing.lg, KokoSpacing.xl, KokoSpacing.sm,
+                ),
+                child: Text(
+                  group.label,
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3,
+                    color: KokoColors.mute,
+                  ),
+                ),
+              ),
+            ),
+            // Grid for this group
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: KokoSpacing.xl),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 3,
+                  crossAxisSpacing: 3,
+                  childAspectRatio: 0.75,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    return _StaggeredTile(
+                      index: index,
+                      child: ScreenshotTile(
+                        item: group.items[index],
+                        items: items,
+                        index: items.indexOf(group.items[index]),
                       ),
                     );
                   },
-                ),
-        ),
-        Container(
-          decoration: const BoxDecoration(
-            color: KokoColors.ivory,
-            border: Border(top: BorderSide(color: KokoColors.line)),
-          ),
-          padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: textController,
-                  minLines: 1,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Ask KokoShots',
-                    hintText: 'Find that screenshot with...',
-                  ),
-                  onSubmitted: (_) => _send(),
+                  childCount: group.items.length,
                 ),
               ),
-              const SizedBox(width: 10),
-              IconButton.filled(
-                onPressed: _send,
-                icon: const Icon(Icons.arrow_upward),
-                tooltip: 'Send',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _send() {
-    final text = textController.text;
-    textController.clear();
-    controller.ask(text);
-  }
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: KokoColors.ivory,
-          border: Border.all(color: KokoColors.line),
-          borderRadius: BorderRadius.circular(3),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(value, style: Theme.of(context).textTheme.titleLarge),
-            Text(
-              label.toUpperCase(),
-              style: Theme.of(context).textTheme.labelLarge,
             ),
           ],
-        ),
+          // Bottom spacer for floating navbar
+          SliverToBoxAdapter(
+            child: SizedBox(height: bottomPadding + 100),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _SegmentButton extends StatelessWidget {
-  const _SegmentButton({
-    required this.selected,
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final bool selected;
-  final IconData icon;
+class _DateGroup {
+  const _DateGroup({required this.label, required this.items});
   final String label;
-  final VoidCallback onTap;
+  final List<ScreenshotItem> items;
+}
+
+// ── Staggered fade-in tile ──
+
+class _StaggeredTile extends StatefulWidget {
+  const _StaggeredTile({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<_StaggeredTile> createState() => _StaggeredTileState();
+}
+
+class _StaggeredTileState extends State<_StaggeredTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    final delayMs = (widget.index * 50).clamp(0, 600);
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+
+    _opacity = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    Future.delayed(Duration(milliseconds: delayMs), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(3),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? KokoColors.black : KokoColors.cream,
-          border: Border.all(
-            color: selected ? KokoColors.black : KokoColors.line,
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(
+        position: _slide,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ── Shimmer loading grid (shown during initial load) ──
+
+class _ShimmerLoadingView extends StatelessWidget {
+  const _ShimmerLoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      bottom: false,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fake header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              KokoSpacing.xl, KokoSpacing.lg, KokoSpacing.xl, KokoSpacing.sm,
+            ),
+            child: Container(
+              width: 120,
+              height: 28,
+              decoration: BoxDecoration(
+                color: KokoColors.canvasSoft,
+                borderRadius: KokoRadius.smBorder,
+              ),
+            ),
           ),
-          borderRadius: BorderRadius.circular(3),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          const SizedBox(height: KokoSpacing.xl),
+          // Shimmer grid
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: KokoSpacing.xl),
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 3,
+                crossAxisSpacing: 3,
+                childAspectRatio: 0.75,
+              ),
+              itemCount: 12,
+              itemBuilder: (context, index) => const ShimmerTile(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Empty library state ──
+
+class _EmptyLibrary extends StatelessWidget {
+  const _EmptyLibrary({
+    required this.hasScreenshots,
+    required this.onScan,
+  });
+
+  final bool hasScreenshots;
+  final VoidCallback onScan;
+
+  @override
+  Widget build(BuildContext context) {
+    final title =
+        hasScreenshots ? 'No matches found' : 'No screenshots indexed';
+    final body = hasScreenshots
+        ? 'Try a different search term or category.'
+        : 'Pull down to scan or tap the button below.';
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(KokoSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              icon,
-              size: 18,
-              color: selected ? KokoColors.white : KokoColors.black,
+              hasScreenshots
+                  ? Icons.search_off_rounded
+                  : Icons.photo_library_outlined,
+              size: 40,
+              color: KokoColors.mute,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(height: KokoSpacing.lg),
             Text(
-              label,
-              style: TextStyle(
-                color: selected ? KokoColors.white : KokoColors.black,
+              title,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: KokoColors.ink,
               ),
             ),
+            const SizedBox(height: KokoSpacing.sm),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                color: KokoColors.body,
+              ),
+            ),
+            if (!hasScreenshots) ...[
+              const SizedBox(height: KokoSpacing.xl),
+              FilledButton.icon(
+                onPressed: onScan,
+                icon: const Icon(Icons.auto_awesome_motion, size: 18),
+                label: const Text('Scan screenshots'),
+              ),
+            ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.icon,
-    required this.title,
-    required this.body,
-    required this.actionLabel,
-    required this.onAction,
-  });
-
-  final IconData icon;
-  final String title;
-  final String body;
-  final String actionLabel;
-  final VoidCallback onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const padding = 28.0;
-        final minHeight = constraints.maxHeight > padding * 2
-            ? constraints.maxHeight - padding * 2
-            : 0.0;
-
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(padding),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: minHeight),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, size: 42, color: KokoColors.orange),
-                  const SizedBox(height: 16),
-                  Text(title, style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  Text(
-                    body,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 18),
-                  FilledButton(onPressed: onAction, child: Text(actionLabel)),
-                ],
-              ),
-            ),
-          ),
-        ),
-      },
-    );
-  }
-}
-
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: SizedBox(
-        width: 40,
-        height: 40,
-        child: CircularProgressIndicator(strokeWidth: 2),
-      ),
-    );
-  }
-}
-
-class _KokoMark extends StatelessWidget {
-  const _KokoMark({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = [
-      KokoColors.gold,
-      KokoColors.cream,
-      KokoColors.amber,
-      KokoColors.orange,
-      KokoColors.flame,
-    ];
-    return Opacity(
-      opacity: .62,
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: GridView.count(
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 3,
-          children: List.generate(9, (index) {
-            final active =
-                index == 0 ||
-                index == 2 ||
-                index == 3 ||
-                index == 4 ||
-                index == 5 ||
-                index == 6 ||
-                index == 8;
-            return Container(
-              margin: const EdgeInsets.all(2),
-              color: active
-                  ? colors[index % colors.length]
-                  : Colors.transparent,
-            );
-          }),
         ),
       ),
     );
