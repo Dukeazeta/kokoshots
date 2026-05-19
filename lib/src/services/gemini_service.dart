@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/analysis_result.dart';
 import '../models/screenshot_item.dart';
@@ -9,15 +10,39 @@ import '../models/screenshot_item.dart';
 class GeminiService {
   GeminiService({Dio? dio}) : _dio = dio ?? Dio();
 
-  static const apiKey = String.fromEnvironment('GEMINI_API_KEY');
-  static const model = String.fromEnvironment(
-    'GEMINI_MODEL',
-    defaultValue: 'gemini-2.0-flash',
-  );
+  /// Compile-time key (fallback) via --dart-define=GEMINI_API_KEY
+  static const _compileTimeKey = String.fromEnvironment('GEMINI_API_KEY');
+
+  static const model = 'gemini-2.5-flash';
 
   final Dio _dio;
 
-  bool get isConfigured => apiKey.trim().isNotEmpty;
+  /// Runtime API key, loaded from SharedPreferences.
+  String? _runtimeKey;
+
+  /// The effective API key: runtime > compile-time.
+  String get _apiKey => (_runtimeKey ?? '').isNotEmpty
+      ? _runtimeKey!
+      : _compileTimeKey;
+
+  bool get isConfigured => _apiKey.trim().isNotEmpty;
+
+  /// Load the persisted key from SharedPreferences.
+  Future<void> loadApiKey() async {
+    final prefs = await SharedPreferences.getInstance();
+    _runtimeKey = prefs.getString('gemini_api_key');
+  }
+
+  /// Save a new API key at runtime.
+  Future<void> setApiKey(String key) async {
+    _runtimeKey = key.trim();
+    final prefs = await SharedPreferences.getInstance();
+    if (_runtimeKey!.isEmpty) {
+      await prefs.remove('gemini_api_key');
+    } else {
+      await prefs.setString('gemini_api_key', _runtimeKey!);
+    }
+  }
 
   Future<AnalysisResult> analyzeScreenshot(Uint8List bytes) async {
     if (!isConfigured) {
@@ -26,7 +51,7 @@ class GeminiService {
 
     final response = await _dio.post<Map<String, dynamic>>(
       'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
-      queryParameters: {'key': apiKey},
+      queryParameters: {'key': _apiKey},
       data: {
         'contents': [
           {
@@ -79,7 +104,7 @@ Avoid guessing sensitive account numbers or private credentials.
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
-        queryParameters: {'key': apiKey},
+        queryParameters: {'key': _apiKey},
         data: {
           'contents': [
             {

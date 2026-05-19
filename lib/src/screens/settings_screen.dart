@@ -2,15 +2,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../controllers/app_controller.dart';
-import '../services/gemini_service.dart';
 import '../theme/app_theme.dart';
 
-/// Settings tab — API config, scan controls, indexing stats.
-class SettingsScreen extends ConsumerWidget {
+/// Settings tab — API key input, scan controls, indexing stats.
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  final _apiKeyController = TextEditingController();
+  bool _apiKeyObscured = true;
+  bool _apiKeySaved = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill with existing key if configured
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = ref.read(appControllerProvider);
+      if (controller.geminiConfigured) {
+        _apiKeyController.text = '••••••••••••'; // mask existing key
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final controller = ref.watch(appControllerProvider);
 
     return SafeArea(
@@ -20,14 +46,13 @@ class SettingsScreen extends ConsumerWidget {
           KokoSpacing.xl,
           KokoSpacing.lg,
           KokoSpacing.xl,
-          MediaQuery.of(context).padding.bottom + 100, // clear floating navbar
+          MediaQuery.of(context).padding.bottom + 100,
         ),
         children: [
           // ── Header ──
           const Text(
             'Settings',
             style: TextStyle(
-              fontFamily: 'Inter',
               fontSize: 24,
               fontWeight: FontWeight.w500,
               letterSpacing: -0.4,
@@ -53,11 +78,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: KokoSpacing.sm),
             Text(
               controller.statusText,
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: KokoColors.mute,
-              ),
+              style: const TextStyle(fontSize: 13, color: KokoColors.mute),
             ),
             const SizedBox(height: KokoSpacing.lg),
           ],
@@ -97,44 +118,89 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: KokoSpacing.xxl),
 
-          // ── Config cards ──
-          _ConfigCard(
-            title: 'Gemini API key',
-            status: controller.geminiConfigured ? 'Active' : 'Required',
-            body:
-                'Run with --dart-define=GEMINI_API_KEY=your_key to enable AI descriptions.',
-            good: controller.geminiConfigured,
+          // ── Gemini API Key ──
+          const Text(
+            'GEMINI API KEY',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.8,
+              color: KokoColors.mute,
+            ),
           ),
           const SizedBox(height: KokoSpacing.sm),
-          _CodeBlock(
-            text:
-                'flutter run --dart-define=GEMINI_API_KEY=your_key_here',
+          const Text(
+            'Required for AI-powered screenshot descriptions and smart search.',
+            style: TextStyle(fontSize: 13, color: KokoColors.body, height: 1.5),
           ),
-          const SizedBox(height: KokoSpacing.lg),
-          _ConfigCard(
-            title: 'Gemini model',
-            status: GeminiService.model,
-            body:
-                'Override with --dart-define=GEMINI_MODEL=gemini-2.0-flash if needed.',
-            good: true,
+          const SizedBox(height: KokoSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _apiKeyController,
+                  obscureText: _apiKeyObscured,
+                  style: const TextStyle(
+                    color: KokoColors.ink,
+                    fontSize: 14,
+                    letterSpacing: 0.5,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Paste your API key here',
+                    suffixIcon: GestureDetector(
+                      onTap: () => setState(() => _apiKeyObscured = !_apiKeyObscured),
+                      child: Icon(
+                        _apiKeyObscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        size: 18,
+                        color: KokoColors.mute,
+                      ),
+                    ),
+                  ),
+                  onChanged: (_) {
+                    if (_apiKeySaved) setState(() => _apiKeySaved = false);
+                  },
+                ),
+              ),
+              const SizedBox(width: KokoSpacing.sm),
+              FilledButton(
+                onPressed: () async {
+                  final key = _apiKeyController.text.trim();
+                  await controller.setApiKey(key);
+                  setState(() => _apiKeySaved = true);
+                  Future.delayed(const Duration(seconds: 2), () {
+                    if (mounted) setState(() => _apiKeySaved = false);
+                  });
+                },
+                child: Text(_apiKeySaved ? '✓ Saved' : 'Save'),
+              ),
+            ],
           ),
-          const SizedBox(height: KokoSpacing.lg),
-          _ConfigCard(
-            title: 'Photo permission',
-            status: controller.permission == null
-                ? 'Requested on scan'
-                : controller.permission.toString(),
-            body:
-                'Android will ask for photo access when you first scan. Choose Allow.',
-            good: true,
-          ),
+          if (controller.geminiConfigured) ...[
+            const SizedBox(height: KokoSpacing.sm),
+            Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: KokoColors.success,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: KokoSpacing.sm),
+                const Text(
+                  'API key active',
+                  style: TextStyle(fontSize: 12, color: KokoColors.success),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: KokoSpacing.xxl),
 
-          // ── Danger zone ──
+          // ── Data ──
           const Text(
             'DATA',
             style: TextStyle(
-              fontFamily: 'Inter',
               fontSize: 12,
               fontWeight: FontWeight.w500,
               letterSpacing: 0.8,
@@ -205,7 +271,6 @@ class _StatTile extends StatelessWidget {
             Text(
               value,
               style: const TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 22,
                 fontWeight: FontWeight.w500,
                 color: KokoColors.ink,
@@ -215,7 +280,6 @@ class _StatTile extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 0.6,
@@ -223,114 +287,6 @@ class _StatTile extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Config card ──
-
-class _ConfigCard extends StatelessWidget {
-  const _ConfigCard({
-    required this.title,
-    required this.status,
-    required this.body,
-    required this.good,
-  });
-
-  final String title;
-  final String status;
-  final String body;
-  final bool good;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(KokoSpacing.lg),
-      decoration: BoxDecoration(
-        color: KokoColors.canvasSoft,
-        borderRadius: KokoRadius.mdBorder,
-        border: Border.all(color: KokoColors.hairline),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: KokoColors.ink,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: KokoSpacing.md,
-                  vertical: KokoSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: good ? KokoColors.ink : KokoColors.warning,
-                  borderRadius: KokoRadius.smBorder,
-                ),
-                child: Text(
-                  status,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: good ? KokoColors.onPrimary : KokoColors.canvas,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: KokoSpacing.md),
-          Text(
-            body,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: KokoColors.body,
-              height: 1.5,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Code block ──
-
-class _CodeBlock extends StatelessWidget {
-  const _CodeBlock({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(KokoSpacing.lg),
-      decoration: BoxDecoration(
-        color: KokoColors.canvas,
-        borderRadius: KokoRadius.mdBorder,
-        border: Border.all(color: KokoColors.hairline),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 13,
-          color: KokoColors.bodyStrong,
-          height: 1.5,
         ),
       ),
     );

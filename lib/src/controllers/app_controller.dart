@@ -96,6 +96,8 @@ class AppController extends ChangeNotifier {
   Future<void> initialize() async {
     _isLoading = true;
     notifyListeners();
+    // Load persisted API key before anything else
+    await _gemini.loadApiKey();
     _screenshots = await _database.loadScreenshots();
     _messages = await _database.loadChatMessages();
     _isLoading = false;
@@ -107,6 +109,12 @@ class AppController extends ChangeNotifier {
     if (_screenshots.isEmpty) {
       unawaited(requestPermissionAndScan());
     }
+  }
+
+  /// Save a Gemini API key at runtime.
+  Future<void> setApiKey(String key) async {
+    await _gemini.setApiKey(key);
+    notifyListeners();
   }
 
   void setQuery(String value) {

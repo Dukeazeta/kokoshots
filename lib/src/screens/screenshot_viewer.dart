@@ -236,7 +236,6 @@ class _TopOverlay extends StatelessWidget {
               child: Text(
                 position,
                 style: const TextStyle(
-                  fontFamily: 'Inter',
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   color: KokoColors.ink,
@@ -292,7 +291,6 @@ class _BottomOverlay extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
                 height: 1.4,
@@ -304,7 +302,6 @@ class _BottomOverlay extends StatelessWidget {
             Text(
               DateFormat.yMMMd().add_jm().format(item.dateTaken),
               style: const TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 13,
                 color: KokoColors.body,
               ),
@@ -331,8 +328,7 @@ class _BottomOverlay extends StatelessWidget {
                     child: Text(
                       tag,
                       style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
+                              fontSize: 12,
                         color: KokoColors.bodyStrong,
                       ),
                     ),
@@ -371,7 +367,6 @@ class _ViewerStatusPill extends StatelessWidget {
       child: Text(
         processed ? 'AI' : status.replaceAll('_', ' ').toUpperCase(),
         style: TextStyle(
-          fontFamily: 'Inter',
           fontSize: 10,
           fontWeight: FontWeight.w500,
           letterSpacing: 0.5,

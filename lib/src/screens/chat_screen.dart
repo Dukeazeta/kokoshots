@@ -66,7 +66,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Text(
                     'KokoShots AI',
                     style: TextStyle(
-                      fontFamily: 'Inter',
                       fontSize: 24,
                       fontWeight: FontWeight.w500,
                       letterSpacing: -0.4,
@@ -80,8 +79,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     child: const Text(
                       'Clear',
                       style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
+                          fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: KokoColors.mute,
                       ),
@@ -223,8 +221,7 @@ class _ChatBubble extends StatelessWidget {
               child: Text(
                 message.text,
                 style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
+                    fontSize: 14,
                   height: 1.42,
                   color: isUser ? KokoColors.onPrimary : KokoColors.ink,
                 ),
@@ -455,7 +452,6 @@ class _EmptyChatState extends StatelessWidget {
             const Text(
               'Ask for a screenshot',
               style: TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
                 color: KokoColors.ink,
@@ -466,7 +462,6 @@ class _EmptyChatState extends StatelessWidget {
               'Describe what you remember and the AI will find it.',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 14,
                 color: KokoColors.body,
               ),
@@ -492,8 +487,7 @@ class _EmptyChatState extends StatelessWidget {
                     child: Text(
                       prompt,
                       style: const TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 13,
+                          fontSize: 13,
                         color: KokoColors.body,
                       ),
                     ),

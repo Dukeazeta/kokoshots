@@ -160,7 +160,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Text(
                         '${category.key} ${category.value}',
                         style: TextStyle(
-                          fontFamily: 'Inter',
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: isActive
@@ -220,7 +219,6 @@ class _Header extends StatelessWidget {
             child: Text(
               'KokoShots',
               style: TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 24,
                 fontWeight: FontWeight.w500,
                 letterSpacing: -0.4,
@@ -334,8 +332,7 @@ class _DateGroupedGrid extends StatelessWidget {
                 child: Text(
                   group.label,
                   style: const TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13,
+                        fontSize: 13,
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.3,
                     color: KokoColors.mute,
@@ -526,7 +523,6 @@ class _EmptyLibrary extends StatelessWidget {
             Text(
               title,
               style: const TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
                 color: KokoColors.ink,
@@ -537,7 +533,6 @@ class _EmptyLibrary extends StatelessWidget {
               body,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 14,
                 color: KokoColors.body,
               ),

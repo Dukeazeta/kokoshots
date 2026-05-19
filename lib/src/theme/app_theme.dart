@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Warp-inspired design tokens — warm near-charcoal canvas, off-white ink,
-// tight radii, Inter typography. Derived from warp/DESIGN.md.
+// tight radii, Inter typography via Google Fonts.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class KokoColors {
@@ -21,16 +22,15 @@ class KokoColors {
   static const mute       = Color(0xffaea69c);
 
   // ── Brand / Primary ──
-  static const primary    = Color(0xfff7f5f0); // off-white — the brand's only "color"
-  static const onPrimary  = Color(0xff2b2622); // text on primary buttons
+  static const primary    = Color(0xfff7f5f0);
+  static const onPrimary  = Color(0xff2b2622);
 
-  // ── Semantic (minimal — kept for status pills) ──
+  // ── Semantic ──
   static const success    = Color(0xff8aad7a);
   static const warning    = Color(0xffd4a84b);
   static const error      = Color(0xffcf6b6b);
 }
 
-// ── Spacing tokens ──
 class KokoSpacing {
   KokoSpacing._();
   static const double xxs = 2;
@@ -43,7 +43,6 @@ class KokoSpacing {
   static const double xxxl = 48;
 }
 
-// ── Radius tokens ──
 class KokoRadius {
   KokoRadius._();
   static const double sm   = 3;
@@ -58,7 +57,68 @@ class KokoRadius {
 }
 
 ThemeData buildKokoTheme() {
-  const fontFamily = 'Inter';
+  // Use Google Fonts Inter for proper font rendering
+  final textTheme = GoogleFonts.interTextTheme(
+    const TextTheme(
+      headlineLarge: TextStyle(
+        fontSize: 32,
+        fontWeight: FontWeight.w500,
+        height: 1.25,
+        letterSpacing: -0.8,
+        color: KokoColors.ink,
+      ),
+      headlineMedium: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.w500,
+        height: 1.33,
+        letterSpacing: -0.4,
+        color: KokoColors.ink,
+      ),
+      titleLarge: TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.w400,
+        height: 1.55,
+        color: KokoColors.ink,
+      ),
+      titleMedium: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        height: 1.5,
+        color: KokoColors.ink,
+      ),
+      bodyLarge: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        height: 1.5,
+        color: KokoColors.ink,
+      ),
+      bodyMedium: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        height: 1.42,
+        color: KokoColors.body,
+      ),
+      bodySmall: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.42,
+        color: KokoColors.ink,
+      ),
+      labelSmall: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        height: 1.33,
+        color: KokoColors.mute,
+      ),
+      labelLarge: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        height: 1.42,
+        color: KokoColors.ink,
+      ),
+    ),
+  );
+
   final colorScheme = ColorScheme.fromSeed(
     seedColor: KokoColors.primary,
     brightness: Brightness.dark,
@@ -73,87 +133,8 @@ ThemeData buildKokoTheme() {
     brightness: Brightness.dark,
     colorScheme: colorScheme,
     scaffoldBackgroundColor: KokoColors.canvas,
-    fontFamily: fontFamily,
+    textTheme: textTheme,
 
-    // ── Typography ──
-    textTheme: const TextTheme(
-      // display-md — section headlines
-      headlineLarge: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 32,
-        fontWeight: FontWeight.w500,
-        height: 1.25,   // 40px
-        letterSpacing: -0.8,
-        color: KokoColors.ink,
-      ),
-      // display-sm — card titles, screen headers
-      headlineMedium: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 24,
-        fontWeight: FontWeight.w500,
-        height: 1.33,   // 32px
-        letterSpacing: -0.4,
-        color: KokoColors.ink,
-      ),
-      // body-lg — lead paragraphs
-      titleLarge: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 18,
-        fontWeight: FontWeight.w400,
-        height: 1.55,   // 28px
-        color: KokoColors.ink,
-      ),
-      // body-md-strong — nav / emphasis
-      titleMedium: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 16,
-        fontWeight: FontWeight.w500,
-        height: 1.5,    // 24px
-        color: KokoColors.ink,
-      ),
-      // body-md — default body
-      bodyLarge: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
-        height: 1.5,
-        color: KokoColors.ink,
-      ),
-      // body-sm — secondary body
-      bodyMedium: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w400,
-        height: 1.42,
-        color: KokoColors.body,
-      ),
-      // body-sm-strong — nav links, button labels
-      bodySmall: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        height: 1.42,
-        color: KokoColors.ink,
-      ),
-      // caption
-      labelSmall: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        height: 1.33,
-        color: KokoColors.mute,
-      ),
-      // button-md
-      labelLarge: TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        height: 1.42,
-        color: KokoColors.ink,
-      ),
-    ),
-
-    // ── App Bar ──
     appBarTheme: const AppBarTheme(
       backgroundColor: KokoColors.canvas,
       foregroundColor: KokoColors.ink,
@@ -169,7 +150,6 @@ ThemeData buildKokoTheme() {
       ),
     ),
 
-    // ── Cards ──
     cardTheme: CardThemeData(
       color: KokoColors.canvasSoft,
       surfaceTintColor: Colors.transparent,
@@ -180,7 +160,6 @@ ThemeData buildKokoTheme() {
       ),
     ),
 
-    // ── Buttons ──
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: KokoColors.primary,
@@ -188,12 +167,7 @@ ThemeData buildKokoTheme() {
         shape: RoundedRectangleBorder(borderRadius: KokoRadius.smBorder),
         padding: const EdgeInsets.symmetric(
           horizontal: KokoSpacing.lg,
-          vertical: KokoSpacing.sm,
-        ),
-        textStyle: const TextStyle(
-          fontFamily: fontFamily,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
+          vertical: KokoSpacing.sm + 4,
         ),
       ),
     ),
@@ -209,12 +183,9 @@ ThemeData buildKokoTheme() {
       ),
     ),
     iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(
-        foregroundColor: KokoColors.ink,
-      ),
+      style: IconButton.styleFrom(foregroundColor: KokoColors.ink),
     ),
 
-    // ── Inputs ──
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: KokoColors.canvasSoft,
@@ -238,20 +209,13 @@ ThemeData buildKokoTheme() {
       ),
     ),
 
-    // ── Chips ──
     chipTheme: ChipThemeData(
       backgroundColor: KokoColors.canvasSoft,
       side: const BorderSide(color: KokoColors.hairline),
       shape: RoundedRectangleBorder(borderRadius: KokoRadius.smBorder),
-      labelStyle: const TextStyle(
-        fontFamily: fontFamily,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
-        color: KokoColors.body,
-      ),
+      labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: KokoColors.body),
     ),
 
-    // ── Bottom Sheet ──
     bottomSheetTheme: BottomSheetThemeData(
       backgroundColor: KokoColors.canvas,
       surfaceTintColor: Colors.transparent,
@@ -261,21 +225,11 @@ ThemeData buildKokoTheme() {
       dragHandleColor: KokoColors.hairline,
     ),
 
-    // ── Divider ──
     dividerColor: KokoColors.hairline,
-    dividerTheme: const DividerThemeData(
-      color: KokoColors.hairline,
-      thickness: 1,
-      space: 0,
-    ),
-
-    // ── Progress indicators ──
+    dividerTheme: const DividerThemeData(color: KokoColors.hairline, thickness: 1, space: 0),
     progressIndicatorTheme: const ProgressIndicatorThemeData(
       color: KokoColors.ink,
       linearTrackColor: KokoColors.canvasSoft,
     ),
-
-    // ── Refresh indicator ──
-    // Note: RefreshIndicator will use primary color by default
   );
 }

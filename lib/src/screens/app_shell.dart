@@ -19,7 +19,6 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
-  bool _onboardingChecked = false;
 
   static const _tabs = <_NavItem>[
     _NavItem(icon: Icons.grid_view_rounded, label: 'Home'),
@@ -37,7 +36,6 @@ class _AppShellState extends State<AppShell> {
     final prefs = await SharedPreferences.getInstance();
     final completed = prefs.getBool('onboarding_completed') ?? false;
     if (mounted) {
-      setState(() => _onboardingChecked = true);
       if (!completed) {
         // Show onboarding as a full-screen modal
         await Navigator.of(context).push(
@@ -166,7 +164,6 @@ class _NavBarItem extends StatelessWidget {
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 180),
               style: TextStyle(
-                fontFamily: 'Inter',
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w500 : FontWeight.w400,
                 color: isActive ? KokoColors.ink : KokoColors.mute,
