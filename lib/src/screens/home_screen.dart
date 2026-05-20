@@ -71,6 +71,50 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
 
+          // ── Daily limit banner ──
+          if (controller.dailyLimitReached)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                KokoSpacing.xl, KokoSpacing.sm, KokoSpacing.xl, 0,
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: KokoSpacing.lg,
+                  vertical: KokoSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFF3E0),
+                  borderRadius: KokoRadius.smBorder,
+                  border: Border.all(
+                    color: const Color(0xFFFFCC02).withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.schedule_rounded,
+                      size: 18,
+                      color: Color(0xFFE65100),
+                    ),
+                    const SizedBox(width: KokoSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        '${controller.processedCount} analyzed · '
+                        '${controller.pendingCount} remaining — '
+                        'resumes tomorrow',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFFBF360C),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           // ── Search field ──
           AnimatedCrossFade(
             firstChild: const SizedBox(width: double.infinity),

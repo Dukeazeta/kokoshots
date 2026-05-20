@@ -290,10 +290,10 @@ class _ChatBubble extends StatelessWidget {
                   topLeft: const Radius.circular(KokoRadius.lg),
                   topRight: const Radius.circular(KokoRadius.lg),
                   bottomLeft: Radius.circular(
-                    isUser ? KokoRadius.lg : KokoRadius.xs,
+                    isUser ? KokoRadius.lg : KokoRadius.sm,
                   ),
                   bottomRight: Radius.circular(
-                    isUser ? KokoRadius.xs : KokoRadius.lg,
+                    isUser ? KokoRadius.sm : KokoRadius.lg,
                   ),
                 ),
                 border: Border.all(

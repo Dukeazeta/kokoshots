@@ -5,6 +5,7 @@ import 'package:kokoshots/src/app.dart';
 import 'package:kokoshots/src/services/database_service.dart';
 import 'package:kokoshots/src/services/gemini_service.dart';
 import 'package:kokoshots/src/services/media_service.dart';
+import 'package:kokoshots/src/services/rate_limiter.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -22,6 +23,7 @@ void main() {
               database: DatabaseService(),
               media: MediaService(),
               gemini: GeminiService(),
+              rateLimiter: RateLimiter(),
               initialStatusText: 'No screenshots indexed yet',
               isLoading: false,
             );

@@ -44,14 +44,13 @@ class GeminiService {
     }
   }
 
+  /// Analyze a single screenshot. Kept for backward compatibility.
   Future<AnalysisResult> analyzeScreenshot(Uint8List bytes) async {
     if (!isConfigured) {
       throw const GeminiNotConfiguredException();
     }
 
-    final response = await _dio.post<Map<String, dynamic>>(
-      'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
-      queryParameters: {'key': _apiKey},
+    final response = await _postWithRateLimitCheck(
       data: {
         'contents': [
           {
@@ -74,14 +73,69 @@ Avoid guessing sensitive account numbers or private credentials.
           },
         ],
       },
-      options: Options(
-        receiveTimeout: const Duration(seconds: 45),
-        sendTimeout: const Duration(seconds: 45),
-      ),
     );
 
     final text = _extractText(response.data);
     return _parseAnalysis(text);
+  }
+
+  /// Analyze a batch of screenshots in a single API call.
+  ///
+  /// Each entry in [images] is a `(label, bytes)` pair where `label` is a
+  /// human-readable name (used only in the prompt) and `bytes` is the JPEG
+  /// image data.
+  ///
+  /// Returns a list of [AnalysisResult] in the same order as [images].
+  Future<List<AnalysisResult>> analyzeBatch(
+    List<(String label, Uint8List bytes)> images,
+  ) async {
+    if (!isConfigured) {
+      throw const GeminiNotConfiguredException();
+    }
+    if (images.isEmpty) return const [];
+
+    // Build the parts list: prompt first, then all images with labels.
+    final parts = <Map<String, dynamic>>[];
+
+    // Prompt
+    parts.add({
+      'text': '''
+You will receive ${images.length} device screenshots numbered Image 0 through Image ${images.length - 1}.
+For each image, analyze its content and return a JSON array with one object per image.
+
+Each object must have:
+- "index": the image number (integer)
+- "description": one useful sentence describing the screenshot
+- "tags": 4 to 8 lowercase tags
+
+Return ONLY the JSON array, no other text. Avoid guessing sensitive account numbers or private credentials.
+''',
+    });
+
+    // Images
+    for (var i = 0; i < images.length; i++) {
+      parts.add({'text': 'Image $i:'});
+      parts.add({
+        'inline_data': {
+          'mime_type': 'image/jpeg',
+          'data': base64Encode(images[i].$2),
+        },
+      });
+    }
+
+    final response = await _postWithRateLimitCheck(
+      data: {
+        'contents': [
+          {'parts': parts},
+        ],
+      },
+      // Longer timeout for large batches
+      receiveTimeout: const Duration(seconds: 90),
+      sendTimeout: const Duration(seconds: 90),
+    );
+
+    final text = _extractText(response.data);
+    return AnalysisResult.parseMultiple(text, batchSize: images.length);
   }
 
   Future<String> buildSearchReply({
@@ -102,9 +156,7 @@ Avoid guessing sensitive account numbers or private credentials.
     }).toList();
 
     try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
-        queryParameters: {'key': _apiKey},
+      final response = await _postWithRateLimitCheck(
         data: {
           'contents': [
             {
@@ -125,8 +177,43 @@ Reply briefly with what was found and what to try next if results are weak.
         },
       );
       return _extractText(response.data).trim();
+    } on RateLimitException {
+      // Let the caller handle rate limits
+      rethrow;
     } catch (_) {
       return _fallbackReply(question, localMatches, totalIndexed);
+    }
+  }
+
+  // ── Private helpers ──
+
+  /// Wraps all Gemini API calls with 429 detection.
+  Future<Response<Map<String, dynamic>>> _postWithRateLimitCheck({
+    required Map<String, dynamic> data,
+    Duration receiveTimeout = const Duration(seconds: 45),
+    Duration sendTimeout = const Duration(seconds: 45),
+  }) async {
+    try {
+      return await _dio.post<Map<String, dynamic>>(
+        'https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent',
+        queryParameters: {'key': _apiKey},
+        data: data,
+        options: Options(
+          receiveTimeout: receiveTimeout,
+          sendTimeout: sendTimeout,
+        ),
+      );
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 429) {
+        // Extract Retry-After header if present
+        final retryAfterRaw = e.response?.headers.value('retry-after');
+        final retryAfterSeconds = int.tryParse(retryAfterRaw ?? '');
+        throw RateLimitException(
+          retryAfterSeconds: retryAfterSeconds,
+          message: e.response?.data?.toString() ?? 'Rate limit exceeded',
+        );
+      }
+      rethrow;
     }
   }
 
@@ -186,4 +273,19 @@ Reply briefly with what was found and what to try next if results are weak.
 
 class GeminiNotConfiguredException implements Exception {
   const GeminiNotConfiguredException();
+}
+
+/// Thrown when the Gemini API returns HTTP 429.
+class RateLimitException implements Exception {
+  const RateLimitException({this.retryAfterSeconds, this.message});
+
+  /// Seconds to wait before retrying, from the Retry-After header.
+  final int? retryAfterSeconds;
+
+  /// Raw error message from the API.
+  final String? message;
+
+  @override
+  String toString() =>
+      'RateLimitException(retryAfter: ${retryAfterSeconds}s, message: $message)';
 }
