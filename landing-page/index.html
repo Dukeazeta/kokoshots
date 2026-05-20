@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KokoShots — Your screenshot memory, indexed locally by AI</title>
+  <meta name="description" content="KokoShots is a local-first desktop and mobile application that uses on-device Google Gemini models to index and search your screenshots with natural language. 100% private, 100% offline.">
+  
+  <!-- Open Graph / SEO metadata -->
+  <meta property="og:title" content="KokoShots — Your screenshot memory, indexed locally by AI">
+  <meta property="og:description" content="Local-first natural language screenshot explorer. Your privacy comes first.">
+  <meta property="og:type" content="website">
+  
+  <!-- Link Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient background glow mesh -->
+  <div class="ambient-glow"></div>
+
+  <!-- Film Grain Overlay for physical paper feel -->
+  <div class="film-grain"></div>
+
+  <!-- Full-Screen Translucent Lightbox Overlay -->
+  <div class="preview-overlay" id="lightbox">
+    <div class="preview-overlay-content">
+      <div class="preview-overlay-close" id="lightbox-close">✕</div>
+      <div class="preview-overlay-image-wrapper">
+        <img src="" id="lightbox-img" alt="Enlarged screenshot">
+      </div>
+      <div class="preview-overlay-info">
+        <h4 class="display-sm" id="lightbox-title">Screenshot Title</h4>
+        <p class="body-sm" id="lightbox-desc">OCR descriptions and analysis tags.</p>
+        <p class="caption" id="lightbox-date" style="font-size: 10px; margin-top: 4px;">Date Indexed</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Header Navigation -->
+  <header id="site-header">
+    <div class="container nav-wrapper">
+      <a href="#" class="logo" id="nav-logo">
+        <div class="logo-icon">K</div>
+        <span>KokoShots</span>
+      </a>
+      <nav class="nav-links" id="main-nav">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#demo" class="nav-link">Interactive Demo</a>
+        <a href="#download" class="nav-link">Download</a>
+      </nav>
+      <div>
+        <a href="#download" class="btn-primary" id="header-cta-btn">
+          Get Started
+          <span class="btn-icon-wrapper">↗</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-band" id="hero">
+    <div class="container">
+      <div class="hero-tag reveal-on-scroll">
+        <span class="caption">On-Device Gemini Integration</span>
+      </div>
+      <h1 class="display-xl hero-title reveal-on-scroll" style="transition-delay: 100ms;">
+        Your screenshot memory.<br>
+        Indexed locally by <span class="display-serif">AI</span>.
+      </h1>
+      <p class="body-lg hero-desc reveal-on-scroll" style="transition-delay: 200ms;">
+        KokoShots automatically indexes your screenshot gallery on-device. Search by description, text, or visual context using natural language. 100% private, 100% offline.
+      </p>
+      
+      <div class="hero-actions reveal-on-scroll" style="transition-delay: 300ms;">
+        <a href="#download" class="btn-primary" id="hero-primary-btn">
+          Download App
+          <span class="btn-icon-wrapper">↗</span>
+        </a>
+        <a href="#demo" class="btn-secondary" id="hero-secondary-btn">Try Interactive Demo</a>
+      </div>
+
+      <!-- Double-Bezel Main App Mockup -->
+      <div class="double-bezel reveal-on-scroll" style="transition-delay: 400ms;" id="hero-mockup-frame">
+        <div class="double-bezel-inner">
+          <div class="mockup-app">
+            <!-- Sidebar -->
+            <div class="mockup-sidebar">
+              <div class="logo" style="margin-bottom: var(--spacing-lg);">
+                <div class="logo-icon" style="width: 22px; height: 22px; font-size: 12px;">K</div>
+                <span style="font-size: 14px;">KokoShots</span>
+              </div>
+              <div class="mockup-nav-group">
+                <div class="mockup-nav-item active">
+                  <span>🖼️</span> Screenshots
+                </div>
+                <div class="mockup-nav-item">
+                  <span>💬</span> AI Chat Explorer
+                </div>
+                <div class="mockup-nav-item">
+                  <span>⚙️</span> Settings
+                </div>
+              </div>
+            </div>
+            
+            <!-- Main Grid Panel -->
+            <div class="mockup-main">
+              <div class="mockup-header">
+                <!-- Interactive Search Bar inside Mockup -->
+                <div class="mockup-search-container">
+                  <span class="mockup-search-icon">🔍</span>
+                  <input type="text" class="mockup-search" id="mockup-search-input" placeholder="Type to search (e.g. 'receipt', 'map', 'cat')...">
+                </div>
+                <div class="caption" style="font-size: 11px; margin: 0;" id="mockup-count-label">8 screenshots</div>
+              </div>
+
+              <!-- Grid Content -->
+              <div class="mockup-grid-section">
+                <div class="mockup-date">Today</div>
+                <div class="mockup-grid" id="mockup-grid-today">
+                  <!-- Shimmer tiles to load mock screenshots -->
+                  <div class="mockup-tile" data-keywords="receipt bill invoice total cost">
+                    <div class="shimmer-placeholder" id="shimmer-1"></div>
+                  </div>
+                  <div class="mockup-tile" data-keywords="map navigation location code route">
+                    <div class="shimmer-placeholder" id="shimmer-2"></div>
+                  </div>
+                  <div class="mockup-tile" data-keywords="bank money balance statement cost">
+                    <div class="shimmer-placeholder" id="shimmer-3"></div>
+                  </div>
+                  <div class="mockup-tile" data-keywords="cat meme funny animal screenshot pet">
+                    <div class="shimmer-placeholder" id="shimmer-4"></div>
+                  </div>
+                </div>
+
+                <div class="mockup-date" style="margin-top: var(--spacing-lg);">Yesterday</div>
+                <div class="mockup-grid" id="mockup-grid-yesterday">
+                  <div class="mockup-tile" data-keywords="receipt cost transaction outline list">
+                    <div class="shimmer-placeholder" id="shimmer-5"></div>
+                  </div>
+                  <div class="mockup-tile" data-keywords="code developer terminal abstract dark">
+                    <div class="shimmer-placeholder" id="shimmer-6"></div>
+                  </div>
+                  <div class="mockup-tile" data-keywords="chart graph data statistics balance outline">
+                    <div class="shimmer-placeholder" id="shimmer-7"></div>
+                  </div>
+                  <div class="mockup-tile" data-keywords="design wireframe layout visual interface">
+                    <div class="shimmer-placeholder" id="shimmer-8"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </section>
+
+  <!-- Core Features Bento Section -->
+  <section class="content-band" id="features">
+    <div class="container">
+      <div class="section-eyebrow reveal-on-scroll">
+        <span class="caption">On-Device Intelligence</span>
+      </div>
+      <h2 class="display-lg section-header reveal-on-scroll" style="transition-delay: 100ms;">
+        Zero servers. Zero cloud tracking. Beautiful local search.
+      </h2>
+
+      <!-- Bento Grid Architecture -->
+      <div class="bento-grid">
+        <!-- Feature 1: Natural language query -->
+        <div class="bento-card col-8 reveal-on-scroll">
+          <div class="bento-card-top">
+            <div class="bento-icon">🔍</div>
+            <h3 class="display-sm">Smarter Natural Language Search</h3>
+            <p class="body-md">Skip strict tags and filenames. Ask questions like you're talking to a designer. KokoShots searches descriptions and OCR'd metadata instantly.</p>
+          </div>
+          <div class="bento-visual">
+            <!-- Simulated code snippets -->
+            <pre class="code-text" style="padding: var(--spacing-lg); width: 100%; text-align: left;">
+<span style="color: var(--color-mute);">// Local sqlite index query execution</span>
+SELECT * FROM screenshots 
+WHERE description LIKE <span style="color: var(--color-primary);">'%receipt%'</span> 
+OR tags CONTAINS <span style="color: var(--color-primary);">'invoice'</span>
+ORDER BY date_taken DESC LIMIT 8;
+            </pre>
+          </div>
+        </div>
+
+        <!-- Feature 2: local sqlite database -->
+        <div class="bento-card col-4 reveal-on-scroll" style="transition-delay: 150ms;">
+          <div class="bento-card-top">
+            <div class="bento-icon">🔒</div>
+            <h3 class="display-sm">100% Local Sandbox</h3>
+            <p class="body-md">Your database and screenshots never leave your physical hard drive. Runs offline on your phone or computer, preserving your ultimate privacy footprint.</p>
+          </div>
+          <div class="bento-visual" style="background-color: var(--color-canvas-soft); display: flex; flex-direction: column; justify-content: center; gap: 8px;">
+            <div class="caption">SQLite Database State</div>
+            <div class="btn-secondary" style="font-family: 'DM Mono', monospace; font-size: 11px; padding: 4px var(--spacing-sm); border-radius: var(--rounded-xs);">DATABASE_ENCRYPTED</div>
+          </div>
+        </div>
+
+        <!-- Feature 3: stable flash model -->
+        <div class="bento-card col-4 reveal-on-scroll">
+          <div class="bento-card-top">
+            <div class="bento-icon">⚡</div>
+            <h3 class="display-sm">Powered by Gemini Flash</h3>
+            <p class="body-md">Leverages Google's high-efficiency `gemini-2.5-flash` model to analyze your screenshots locally or using your own secure API key.</p>
+          </div>
+          <div class="bento-visual" style="display: flex; align-items: center; justify-content: center;">
+            <div class="display-serif" style="color: var(--color-primary); font-size: 40px;">2.5-Flash</div>
+          </div>
+        </div>
+
+        <!-- Feature 4: PageView Zoom Detail Viewer -->
+        <div class="bento-card col-8 reveal-on-scroll" style="transition-delay: 150ms;">
+          <div class="bento-card-top">
+            <div class="bento-icon">🔎</div>
+            <h3 class="display-sm">Deep In-App Inspection</h3>
+            <p class="body-md">Smooth PageViews allow you to glide between screenshots effortlessly. Pitch-to-zoom allows 5x magnification, reading tiny pixels inside details with crystal-clear rendering.</p>
+          </div>
+          <div class="bento-visual" style="padding: var(--spacing-lg); overflow: hidden; position: relative;">
+            <!-- Simple SVG-like representation of deep zoom viewport -->
+            <div style="width: 120px; height: 180px; border: 1px solid var(--color-hairline); border-radius: var(--rounded-sm); position: relative; background: var(--color-canvas-soft);">
+              <div style="position: absolute; top: 10px; left: 10px; width: 30px; height: 30px; border: 1px solid var(--color-primary); border-radius: var(--rounded-full); display: flex; align-items: center; justify-content: center; font-size: 10px;">5x</div>
+              <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; height: 40px; background-color: var(--color-canvas); border: 1px solid var(--color-hairline); border-radius: var(--rounded-xs);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive Terminal Chat Demo -->
+  <section class="content-band" id="demo">
+    <div class="container">
+      <div class="chat-showcase">
+        <!-- left description and preset query chips -->
+        <div class="chat-showcase-info reveal-on-scroll">
+          <span class="caption">Test the Experience</span>
+          <h2 class="display-lg">Ask KokoShots.</h2>
+          <p class="body-lg">
+            See how the local database processes visual tags, filters descriptions, and instantly indexes matching screens. Click any search chip or type directly in the console prompt!
+          </p>
+
+          <div class="chip-group" id="demo-chips">
+            <div class="chip active" data-query="Find receipts from last month">Receipts</div>
+            <div class="chip" data-query="Show me screenshots of maps">Maps & Navigation</div>
+            <div class="chip" data-query="Screenshots of my bank app">Bank & Balance</div>
+            <div class="chip" data-query="That meme with the cat">Cat Meme</div>
+          </div>
+        </div>
+
+        <!-- right interactive terminal screen inside double bezel -->
+        <div class="double-bezel reveal-on-scroll" style="width: 100%; max-width: 500px; transition-delay: 150ms;" id="demo-terminal-frame">
+          <div class="double-bezel-inner">
+            <div class="terminal-window">
+              <!-- Window top-bar -->
+              <div class="terminal-header">
+                <div class="terminal-dots">
+                  <div class="terminal-dot"></div>
+                  <div class="terminal-dot"></div>
+                  <div class="terminal-dot"></div>
+                </div>
+                <div class="terminal-title">AI chat search</div>
+                <div style="width: 36px;"></div>
+              </div>
+
+              <!-- Terminal chat body stream -->
+              <div class="terminal-body" id="chat-stream">
+                <!-- User message -->
+                <div class="chat-bubble user">
+                  <div class="bubble-content" id="user-bubble-text">Find receipts from last month</div>
+                </div>
+
+                <!-- Assistant Response -->
+                <div class="chat-bubble assistant" id="assistant-bubble">
+                  <div class="bubble-content" id="assistant-bubble-text">
+                    Found 2 matching receipts in your local index. Tapping any preview opens the full detail viewer.
+                  </div>
+                  
+                  <!-- Match previews -->
+                  <div class="chat-previews" id="assistant-previews">
+                    <!-- Preloaded SVG screenshots -->
+                    <div class="chat-preview-tile">
+                      <div class="shimmer-placeholder" id="chat-shimmer-1"></div>
+                    </div>
+                    <div class="chat-preview-tile">
+                      <div class="shimmer-placeholder" id="chat-shimmer-2"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Interactive Terminal Input -->
+              <div class="terminal-input-row">
+                <span class="terminal-input-prompt">kokoshots &gt;</span>
+                <input type="text" class="terminal-input-field" id="terminal-field" placeholder="Type a custom query & hit Enter..." autocomplete="off">
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Platforms & Download Segment -->
+  <section class="content-band" id="download">
+    <div class="container">
+      <div class="section-eyebrow reveal-on-scroll" style="text-align: center;">
+        <span class="caption">Get KokoShots</span>
+      </div>
+      <h2 class="display-lg reveal-on-scroll" style="text-align: center; margin-bottom: var(--spacing-5xl); max-width: 600px; margin-left: auto; margin-right: auto; transition-delay: 100ms;">
+        Available now on mobile and desktop.
+      </h2>
+
+      <!-- Download Grid (Mac, Linux, Windows) -->
+      <div class="download-grid">
+        <!-- macOS -->
+        <a href="#" class="download-tile reveal-on-scroll" id="download-mac">
+          <div class="download-icon"></div>
+          <div>
+            <h3 class="display-sm" style="margin-bottom: var(--spacing-xs);">macOS</h3>
+            <p class="body-sm">Requires macOS Ventura or newer. Universal binary (Apple Silicon / Intel).</p>
+          </div>
+          <span class="btn-secondary" style="width: 100%;">Download .dmg</span>
+        </a>
+
+        <!-- Windows -->
+        <a href="#" class="download-tile reveal-on-scroll" style="transition-delay: 150ms;" id="download-windows">
+          <div class="download-icon">⊞</div>
+          <div>
+            <h3 class="display-sm" style="margin-bottom: var(--spacing-xs);">Windows</h3>
+            <p class="body-sm">Requires Windows 10/11 x64. Package installs as lightweight local sandbox.</p>
+          </div>
+          <span class="btn-secondary" style="width: 100%;">Download .exe</span>
+        </a>
+
+        <!-- Linux -->
+        <a href="#" class="download-tile reveal-on-scroll" style="transition-delay: 300ms;" id="download-linux">
+          <div class="download-icon">🐧</div>
+          <div>
+            <h3 class="display-sm" style="margin-bottom: var(--spacing-xs);">Linux</h3>
+            <p class="body-sm">Requires Flatpak or Snap. Standard AppImage for all modern distros.</p>
+          </div>
+          <span class="btn-secondary" style="width: 100%;">Download .AppImage</span>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Footer Segment -->
+  <footer id="site-footer">
+    <div class="container footer-wrapper">
+      <div class="footer-brand">
+        <a href="#" class="logo" style="margin-bottom: var(--spacing-xs);">
+          <div class="logo-icon">K</div>
+          <span>KokoShots</span>
+        </a>
+        <p class="body-sm">Local-first, private natural-language screenshot explorer. Built securely with SQLite and Google Gemini.</p>
+      </div>
+
+      <!-- Links Column -->
+      <div class="footer-links-grid">
+        <div class="footer-group">
+          <span class="caption">Explore</span>
+          <a href="#features" class="footer-link">Features</a>
+          <a href="#demo" class="footer-link">Demo</a>
+          <a href="#download" class="footer-link">Download</a>
+        </div>
+        <div class="footer-group">
+          <span class="caption">Security</span>
+          <a href="#" class="footer-link">Privacy Policy</a>
+          <a href="#" class="footer-link">Local Sandbox</a>
+          <a href="#" class="footer-link">Open Source</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Mockup Interactions Scripts -->
+  <script>
+    // 1. Initial Mockup Grid - Detailed responsive SVG mockup graphics
+    const mockImageUrls = [
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='80' height='8' fill='%23dad2c1' rx='2'/%3E%3Crect x='10' y='25' width='140' height='85' fill='%232b2622' rx='4'/%3E%3Crect x='20' y='35' width='50' height='12' fill='%23f7f5f0' opacity='0.8' rx='2'/%3E%3Crect x='20' y='52' width='80' height='4' fill='%23aea69c' rx='1'/%3E%3Crect x='20' y='60' width='60' height='4' fill='%23aea69c' rx='1'/%3E%3Ccircle cx='120' cy='50' r='8' fill='%23fa520f' opacity='0.8'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='10' fill='%23f7f5f0' rx='2'/%3E%3Crect x='10' y='28' width='140' height='80' fill='%232b2622' rx='4'/%3E%3Ccircle cx='80' cy='65' r='24' fill='%23383330' stroke='%233f3a36' stroke-width='2'/%3E%3Cpath d='M60,65 L100,65 M80,45 L80,85' stroke='%233f3a36' stroke-width='1'/%3E%3Ccircle cx='80' cy='60' r='3' fill='%23f7f5f0'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='70' height='8' fill='%23dad2c1' rx='2'/%3E%3Crect x='10' y='25' width='140' height='85' fill='%232b2622' rx='4'/%3E%3Crect x='20' y='40' width='80' height='15' fill='%23383330' rx='2'/%3E%3Ccircle cx='35' cy='47' r='4' fill='%23f7f5f0'/%3E%3Crect x='45' y='45' width='45' height='4' fill='%23aea69c' rx='1'/%3E%3Crect x='20' y='65' width='120' height='35' fill='%23383330' rx='2'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='15' y='15' width='130' height='90' fill='%232b2622' rx='4'/%3E%3Ccircle cx='50' cy='50' r='14' fill='%23dad2c1'/%3E%3Ccircle cx='110' cy='75' r='18' fill='%23f7f5f0' opacity='0.4'/%3E%3Cellipse cx='50' cy='50' rx='4' ry='6' fill='%232b2622'/%3E%3Cpath d='M45,35 L40,40 L45,45 Z M55,35 L60,40 L55,45 Z' fill='%23dad2c1'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='50' height='8' fill='%23aea69c' rx='2'/%3E%3Crect x='10' y='25' width='140' height='85' fill='%232b2622' rx='4'/%3E%3Crect x='20' y='35' width='120' height='55' fill='%23383330' rx='2'/%3E%3Crect x='30' y='45' width='100' height='35' stroke='%233f3a36' stroke-width='1' fill='none'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='20' y='20' width='120' height='80' fill='%232b2622' rx='2'/%3E%3Cpath d='M30,80 L60,50 L90,70 L130,30' stroke='%23f7f5f0' stroke-width='2' fill='none'/%3E%3Ccircle cx='60' cy='50' r='3' fill='%23fa520f'/%3E%3Ccircle cx='130' cy='30' r='3' fill='%23fa520f'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='30' y='10' width='100' height='100' fill='%232b2622' rx='4'/%3E%3Crect x='45' y='25' width='70' height='50' fill='%23f7f5f0' opacity='0.15' rx='2'/%3E%3C/svg%3E",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120' viewBox='0 0 160 120'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='20' y='20' width='120' height='80' fill='%232b2622' rx='4'/%3E%3Crect x='30' y='30' width='35' height='25' fill='%23383330' rx='2'/%3E%3Crect x='75' y='30' width='55' height='25' fill='%23383330' rx='2'/%3E%3Crect x='30' y='65' width='100' height='25' fill='%23383330' rx='2'/%3E%3C/svg%3E"
+    ];
+
+    const mockupDetails = [
+      { title: "Visual Receipt Detail", desc: "Found receipts from last month containing total price and billing tags.", date: "Today · SQLite Index" },
+      { title: "Navigation Location", desc: "Coordinates map screenshot from visual exploration history.", date: "Today · SQLite Index" },
+      { title: "Secure Bank Balance", desc: "Snapshots showing billing details inside protected sqlite database.", date: "Today · SQLite Index" },
+      { title: "Cat Meme Template", desc: "Funny cat image categorized locally under visual tags.", date: "Today · SQLite Index" },
+      { title: "General Cost Sheet", desc: "Receipt outline details extracted and parsed via OCR.", date: "Yesterday · SQLite Index" },
+      { title: "Terminal Code View", desc: "Code details snippet containing terminal logs.", date: "Yesterday · SQLite Index" },
+      { title: "Data Chart Visualization", desc: "Chart graphics layout capturing monthly statistics.", date: "Yesterday · SQLite Index" },
+      { title: "Design Wireframe Wire", desc: "Visual user interface blueprint screenshot.", date: "Yesterday · SQLite Index" }
+    ];
+
+    window.addEventListener("DOMContentLoaded", () => {
+      // Setup dynamic scroll reveals
+      const scrollItems = document.querySelectorAll(".reveal-on-scroll");
+      const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px"
+      };
+      
+      const scrollObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            scrollObserver.unobserve(entry.target);
+          }
+        });
+      }, observerOptions);
+
+      scrollItems.forEach(item => scrollObserver.observe(item));
+
+      // 1. Initial Mockup Grid - Replace shimmers with high-end SVG vector mockups
+      setTimeout(() => {
+        for (let i = 1; i <= 8; i++) {
+          const placeholder = document.getElementById(`shimmer-${i}`);
+          if (placeholder) {
+            const tile = placeholder.parentElement;
+            tile.innerHTML = `<img src="${mockImageUrls[i - 1]}" alt="Mock Screenshot ${i}">`;
+            
+            // Add click listener to open lightbox detail viewer
+            tile.addEventListener("click", () => {
+              openLightbox(mockImageUrls[i - 1], mockupDetails[i - 1]);
+            });
+          }
+        }
+      }, 1000);
+
+      // 2. Interactive Search input inside Mockup App
+      const mockSearchInput = document.getElementById("mockup-search-input");
+      const mockTiles = document.querySelectorAll(".mockup-tile");
+      const mockCountLabel = document.getElementById("mockup-count-label");
+
+      mockSearchInput.addEventListener("input", (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        let visibleCount = 0;
+
+        mockTiles.forEach(tile => {
+          const keywords = tile.getAttribute("data-keywords") || "";
+          if (query === "" || keywords.includes(query)) {
+            tile.classList.remove("hidden");
+            visibleCount++;
+          } else {
+            tile.classList.add("hidden");
+          }
+        });
+
+        mockCountLabel.textContent = `${visibleCount} screenshot${visibleCount === 1 ? '' : 's'}`;
+      });
+      
+      // 3. Setup demo terminal query results mapping
+      const queryResults = {
+        "Find receipts from last month": {
+          text: "SQLite database scanned. Found 2 matching screenshots containing billing transactions and receipt OCR tags.",
+          previews: [
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='140' fill='%232b2622'/%3E%3Crect x='20' y='20' width='80' height='8' fill='%23f7f5f0' rx='1'/%3E%3Crect x='20' y='35' width='50' height='6' fill='%23aea69c' rx='1'/%3E%3Crect x='20' y='55' width='80' height='1' fill='%233f3a36'/%3E%3Crect x='20' y='65' width='40' height='6' fill='%23aea69c' rx='1'/%3E%3Crect x='80' y='65' width='20' height='6' fill='%23f7f5f0' rx='1'/%3E%3Crect x='20' y='80' width='35' height='6' fill='%23aea69c' rx='1'/%3E%3Crect x='80' y='80' width='20' height='6' fill='%23f7f5f0' rx='1'/%3E%3Crect x='20' y='110' width='80' height='1' fill='%233f3a36'/%3E%3Crect x='60' y='125' width='40' height='8' fill='%23f7f5f0' rx='1'/%3E%3C/svg%3E",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='140' fill='%232b2622'/%3E%3Crect x='20' y='20' width='60' height='10' fill='%23f7f5f0' rx='2'/%3E%3Ccircle cx='40' cy='60' r='15' fill='%23aea69c' opacity='0.4'/%3E%3Crect x='25' y='90' width='70' height='6' fill='%23aea69c' rx='1'/%3E%3Crect x='25' y='105' width='50' height='6' fill='%23aea69c' rx='1'/%3E%3Crect x='25' y='120' width='70' height='8' fill='%23f7f5f0' rx='1'/%3E%3C/svg%3E"
+          ],
+          details: [
+            { title: "Store Billing Receipt", desc: "Detailed store invoice showing items lists and tax total.", date: "Today · Local OCR Scan" },
+            { title: "Checkout Transaction", desc: "Confirmation screenshot of online payment transaction.", date: "Today · Local OCR Scan" }
+          ]
+        },
+        "Show me screenshots of maps": {
+          text: "Local search execution returned 1 location snapshot from navigation maps.",
+          previews: [
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='140' fill='%232b2622'/%3E%3Ccircle cx='60' cy='80' r='35' fill='%23383330' stroke='%233f3a36' stroke-width='2'/%3E%3Cpath d='M30,80 L90,80 M60,50 L60,110' stroke='%233f3a36' stroke-width='1'/%3E%3Ccircle cx='60' cy='75' r='4' fill='%23f7f5f0'/%3E%3Cpath d='M60,75 L60,95' stroke='%23f7f5f0' stroke-width='2'/%3E%3C/svg%3E"
+          ],
+          details: [
+            { title: "Navigation Location Map", desc: "Coordinates layout matching map screenshot saved on-device.", date: "Today · Local OCR Scan" }
+          ]
+        },
+        "Screenshots of my bank app": {
+          text: "Private vault secure query completed. Found 2 bank detail snapshots inside your local storage index.",
+          previews: [
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='140' fill='%232b2622'/%3E%3Crect x='20' y='30' width='80' height='35' fill='%23383330' rx='3'/%3E%3Ccircle cx='35' cy='48' r='6' fill='%23f7f5f0'/%3E%3Crect x='50' y='42' width='40' height='5' fill='%23aea69c'/%3E%3Crect x='50' y='50' width='25' height='4' fill='%23aea69c'/%3E%3Crect x='20' y='80' width='80' height='15' fill='%23383330' rx='2'/%3E%3Crect x='30' y='85' width='60' height='5' fill='%23f7f5f0'/%3E%3C/svg%3E",
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='140' fill='%232b2622'/%3E%3Ccircle cx='60' cy='50' r='20' fill='%23383330'/%3E%3Crect x='30' y='85' width='60' height='6' fill='%23aea69c' rx='1'/%3E%3Crect x='20' y='105' width='80' height='25' fill='%23383330' rx='2'/%3E%3C/svg%3E"
+          ],
+          details: [
+            { title: "Bank Checking Balance", desc: "Checking balance and statements visual log index.", date: "Yesterday · Local OCR Scan" },
+            { title: "Bank Accounts Overview", desc: "Primary overview showing list of secure local bank tags.", date: "Yesterday · Local OCR Scan" }
+          ]
+        },
+        "That meme with the cat": {
+          text: "Visual scan complete. Match preview returned 1 screen matching 'meme', 'cat' and 'funny' visual elements.",
+          previews: [
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 160'%3E%3Crect width='100%25' height='100%25' fill='%23383330'/%3E%3Crect x='10' y='10' width='100' height='140' fill='%232b2622'/%3E%3Crect x='20' y='20' width='80' height='70' fill='%23383330' rx='4'/%3E%3Cellipse cx='60' cy='55' rx='18' ry='12' fill='%23dad2c1'/%3E%3Cpath d='M45,45 L50,55 L55,50 Z M75,45 L70,55 L65,50 Z' fill='%23dad2c1'/%3E%3Crect x='20' y='100' width='80' height='6' fill='%23f7f5f0' rx='1'/%3E%3Crect x='30' y='112' width='60' height='6' fill='%23f7f5f0' rx='1'/%3E%3C/svg%3E"
+          ],
+          details: [
+            { title: "Cat Meme Screenshot", desc: "Cat visual elements indexed offline locally by Gemini Flash.", date: "Yesterday · Visual Analysis" }
+          ]
+        }
+      };
+
+      // 4. Chat Explorer Interaction Logic
+      const chips = document.querySelectorAll("#demo-chips .chip");
+      const userBubble = document.getElementById("user-bubble-text");
+      const assistantBubbleText = document.getElementById("assistant-bubble-text");
+      const assistantPreviews = document.getElementById("assistant-previews");
+      const terminalInputField = document.getElementById("terminal-field");
+      
+      // Load initial query previews immediately
+      triggerPreviewLoad("Find receipts from last month");
+
+      // Preset click chips
+      chips.forEach(chip => {
+        chip.addEventListener("click", () => {
+          chips.forEach(c => c.classList.remove("active"));
+          chip.classList.add("active");
+
+          const query = chip.getAttribute("data-query");
+          executeChatQuery(query);
+        });
+      });
+
+      // Typing Directly in Console
+      terminalInputField.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const rawQuery = terminalInputField.value.trim();
+          if (rawQuery.length > 0) {
+            terminalInputField.value = "";
+            executeChatQuery(rawQuery);
+          }
+        }
+      });
+
+      function executeChatQuery(query) {
+        // Render typed query in user bubble
+        userBubble.textContent = query;
+        
+        // Render typing loading indicators
+        assistantBubbleText.innerHTML = `
+          <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        `;
+        assistantPreviews.style.display = "none";
+        assistantPreviews.innerHTML = "";
+
+        setTimeout(() => {
+          // Check for pre-coded mappings or fallback to custom search query text
+          let matched = null;
+          const queryLower = query.toLowerCase();
+          
+          if (queryLower.includes("receipt") || queryLower.includes("invoice") || queryLower.includes("bill")) {
+            matched = "Find receipts from last month";
+          } else if (queryLower.includes("map") || queryLower.includes("nav") || queryLower.includes("location")) {
+            matched = "Show me screenshots of maps";
+          } else if (queryLower.includes("bank") || queryLower.includes("money") || queryLower.includes("balance")) {
+            matched = "Screenshots of my bank app";
+          } else if (queryLower.includes("cat") || queryLower.includes("meme") || queryLower.includes("funny")) {
+            matched = "That meme with the cat";
+          }
+
+          if (matched) {
+            const data = queryResults[matched];
+            assistantBubbleText.textContent = data.text;
+            
+            // Render preview tiles
+            assistantPreviews.style.display = "flex";
+            data.previews.forEach((svg, index) => {
+              assistantPreviews.innerHTML += `
+                <div class="chat-preview-tile">
+                  <div class="shimmer-placeholder" id="chat-shimmer-${index + 1}"></div>
+                </div>
+              `;
+            });
+
+            // Swap shimmers for previews after slight load animation
+            setTimeout(() => {
+              data.previews.forEach((svg, index) => {
+                const previewShimmer = document.getElementById(`chat-shimmer-${index + 1}`);
+                if (previewShimmer) {
+                  const tile = previewShimmer.parentElement;
+                  tile.innerHTML = `<img src="${svg}" alt="Preview screenshot">`;
+                  
+                  // Add click listener to preview overlay lightbox
+                  tile.addEventListener("click", () => {
+                    openLightbox(svg, data.details[index]);
+                  });
+                }
+              });
+            }, 600);
+          } else {
+            // General offline scanning response
+            assistantBubbleText.textContent = `Offline SQLite database scanned for "${query}". Found 0 exact matching metadata rows. Add API credentials to index secondary visuals.`;
+          }
+        }, 1200);
+      }
+
+      function triggerPreviewLoad(query) {
+        const data = queryResults[query];
+        setTimeout(() => {
+          assistantPreviews.innerHTML = "";
+          data.previews.forEach((svg, index) => {
+            assistantPreviews.innerHTML += `
+              <div class="chat-preview-tile" id="chat-init-tile-${index + 1}">
+                <img src="${svg}" alt="Preview screenshot">
+              </div>
+            `;
+            setTimeout(() => {
+              const initTile = document.getElementById(`chat-init-tile-${index + 1}`);
+              if (initTile) {
+                initTile.addEventListener("click", () => {
+                  openLightbox(svg, data.details[index]);
+                });
+              }
+            }, 100);
+          });
+        }, 100);
+      }
+
+      // 5. Lightbox detail viewer mechanisms
+      const lightbox = document.getElementById("lightbox");
+      const lightboxClose = document.getElementById("lightbox-close");
+      const lightboxImg = document.getElementById("lightbox-img");
+      const lightboxTitle = document.getElementById("lightbox-title");
+      const lightboxDesc = document.getElementById("lightbox-desc");
+      const lightboxDate = document.getElementById("lightbox-date");
+
+      function openLightbox(imgSrc, details) {
+        lightboxImg.src = imgSrc;
+        lightboxTitle.textContent = details.title;
+        lightboxDesc.textContent = details.desc;
+        lightboxDate.textContent = details.date;
+        lightbox.classList.add("active");
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove("active");
+      }
+
+      lightboxClose.addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) {
+          closeLightbox();
+        }
+      });
+      
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeLightbox();
+        }
+      });
+
+    });
+  </script>
+
+</body>
+</html>

@@ -96,54 +96,57 @@ class _WelcomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(KokoSpacing.xxl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: KokoColors.canvasSoft,
-              borderRadius: KokoRadius.lgBorder,
-              border: Border.all(color: KokoColors.hairline),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(KokoSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: KokoColors.canvasSoft,
+                borderRadius: KokoRadius.lgBorder,
+                border: Border.all(color: KokoColors.hairline),
+              ),
+              child: const Icon(
+                Icons.auto_awesome_motion_rounded,
+                size: 36,
+                color: KokoColors.ink,
+              ),
             ),
-            child: const Icon(
-              Icons.auto_awesome_motion_rounded,
-              size: 36,
-              color: KokoColors.ink,
+            const SizedBox(height: KokoSpacing.xxl),
+            const Text(
+              'KokoShots',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.8,
+                color: KokoColors.ink,
+              ),
             ),
-          ),
-          const SizedBox(height: KokoSpacing.xxl),
-          const Text(
-            'KokoShots',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.8,
-              color: KokoColors.ink,
+            const SizedBox(height: KokoSpacing.lg),
+            const Text(
+              'Your screenshot memory,\npowered by AI.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.5,
+                color: KokoColors.body,
+              ),
             ),
-          ),
-          const SizedBox(height: KokoSpacing.lg),
-          const Text(
-            'Your screenshot memory,\npowered by AI.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              height: 1.5,
-              color: KokoColors.body,
+            const SizedBox(height: KokoSpacing.xxxl),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onNext,
+                child: const Text('Get started'),
+              ),
             ),
-          ),
-          const SizedBox(height: KokoSpacing.xxxl),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: onNext,
-              child: const Text('Get started'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -172,96 +175,99 @@ class _ApiKeyPageState extends ConsumerState<_ApiKeyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(KokoSpacing.xxl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: KokoColors.canvasSoft,
-              borderRadius: KokoRadius.lgBorder,
-              border: Border.all(color: KokoColors.hairline),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(KokoSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: KokoColors.canvasSoft,
+                borderRadius: KokoRadius.lgBorder,
+                border: Border.all(color: KokoColors.hairline),
+              ),
+              child: const Icon(
+                Icons.key_rounded,
+                size: 36,
+                color: KokoColors.ink,
+              ),
             ),
-            child: const Icon(
-              Icons.key_rounded,
-              size: 36,
-              color: KokoColors.ink,
+            const SizedBox(height: KokoSpacing.xxl),
+            const Text(
+              'Gemini API key',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.4,
+                color: KokoColors.ink,
+              ),
             ),
-          ),
-          const SizedBox(height: KokoSpacing.xxl),
-          const Text(
-            'Gemini API key',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.4,
-              color: KokoColors.ink,
+            const SizedBox(height: KokoSpacing.lg),
+            const Text(
+              'KokoShots uses Google Gemini to understand your screenshots. Paste your API key below.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: KokoColors.body,
+              ),
             ),
-          ),
-          const SizedBox(height: KokoSpacing.lg),
-          const Text(
-            'KokoShots uses Google Gemini to understand your screenshots. Paste your API key below.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: KokoColors.body,
-            ),
-          ),
-          const SizedBox(height: KokoSpacing.xl),
-          TextField(
-            controller: _keyController,
-            obscureText: _obscured,
-            style: const TextStyle(
-              color: KokoColors.ink,
-              fontSize: 14,
-              letterSpacing: 0.5,
-            ),
-            decoration: InputDecoration(
-              hintText: 'AIza...',
-              suffixIcon: GestureDetector(
-                onTap: () => setState(() => _obscured = !_obscured),
-                child: Icon(
-                  _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                  size: 18,
-                  color: KokoColors.mute,
+            const SizedBox(height: KokoSpacing.xl),
+            TextField(
+              controller: _keyController,
+              obscureText: _obscured,
+              style: const TextStyle(
+                color: KokoColors.ink,
+                fontSize: 14,
+                letterSpacing: 0.5,
+              ),
+              decoration: InputDecoration(
+                hintText: 'AIza...',
+                suffixIcon: GestureDetector(
+                  onTap: () => setState(() => _obscured = !_obscured),
+                  child: Icon(
+                    _obscured ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    size: 18,
+                    color: KokoColors.mute,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: KokoSpacing.xxxl),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () async {
-                final key = _keyController.text.trim();
-                if (key.isNotEmpty) {
-                  await ref.read(appControllerProvider).setApiKey(key);
-                }
-                widget.onNext();
-              },
-              child: Text(
-                _keyController.text.trim().isEmpty ? 'Skip for now' : 'Save & continue',
-              ),
-            ),
-          ),
-          const SizedBox(height: KokoSpacing.lg),
-          if (_keyController.text.trim().isNotEmpty)
-            GestureDetector(
-              onTap: widget.onNext,
-              child: const Text(
-                'Skip for now',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: KokoColors.mute,
+            const SizedBox(height: KokoSpacing.xxxl),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  final key = _keyController.text.trim();
+                  if (key.isNotEmpty) {
+                    await ref.read(appControllerProvider).setApiKey(key);
+                  }
+                  widget.onNext();
+                },
+                child: Text(
+                  _keyController.text.trim().isEmpty ? 'Skip for now' : 'Save & continue',
                 ),
               ),
             ),
-        ],
+            const SizedBox(height: KokoSpacing.lg),
+            if (_keyController.text.trim().isNotEmpty)
+              GestureDetector(
+                onTap: widget.onNext,
+                child: const Text(
+                  'Skip for now',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: KokoColors.mute,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -276,70 +282,73 @@ class _PermissionPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.all(KokoSpacing.xxl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: KokoColors.canvasSoft,
-              borderRadius: KokoRadius.lgBorder,
-              border: Border.all(color: KokoColors.hairline),
-            ),
-            child: const Icon(
-              Icons.photo_library_outlined,
-              size: 36,
-              color: KokoColors.ink,
-            ),
-          ),
-          const SizedBox(height: KokoSpacing.xxl),
-          const Text(
-            'Photo access',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.4,
-              color: KokoColors.ink,
-            ),
-          ),
-          const SizedBox(height: KokoSpacing.lg),
-          const Text(
-            'KokoShots needs access to your photos to discover and index screenshots on your device.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.5,
-              color: KokoColors.body,
-            ),
-          ),
-          const SizedBox(height: KokoSpacing.xxxl),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: () async {
-                final controller = ref.read(appControllerProvider);
-                await controller.requestPermissionAndScan();
-                onNext();
-              },
-              child: const Text('Allow photo access'),
-            ),
-          ),
-          const SizedBox(height: KokoSpacing.lg),
-          GestureDetector(
-            onTap: onNext,
-            child: const Text(
-              'Skip for now',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: KokoColors.mute,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(KokoSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: KokoColors.canvasSoft,
+                borderRadius: KokoRadius.lgBorder,
+                border: Border.all(color: KokoColors.hairline),
+              ),
+              child: const Icon(
+                Icons.photo_library_outlined,
+                size: 36,
+                color: KokoColors.ink,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: KokoSpacing.xxl),
+            const Text(
+              'Photo access',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.4,
+                color: KokoColors.ink,
+              ),
+            ),
+            const SizedBox(height: KokoSpacing.lg),
+            const Text(
+              'KokoShots needs access to your photos to discover and index screenshots on your device.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: KokoColors.body,
+              ),
+            ),
+            const SizedBox(height: KokoSpacing.xxxl),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  final controller = ref.read(appControllerProvider);
+                  await controller.requestPermissionAndScan();
+                  onNext();
+                },
+                child: const Text('Allow photo access'),
+              ),
+            ),
+            const SizedBox(height: KokoSpacing.lg),
+            GestureDetector(
+              onTap: onNext,
+              child: const Text(
+                'Skip for now',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: KokoColors.mute,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -356,77 +365,80 @@ class _IndexingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(appControllerProvider);
 
-    return Padding(
-      padding: const EdgeInsets.all(KokoSpacing.xxl),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: KokoColors.canvasSoft,
-              borderRadius: KokoRadius.lgBorder,
-              border: Border.all(color: KokoColors.hairline),
-            ),
-            child: controller.isScanning
-                ? const Padding(
-                    padding: EdgeInsets.all(22),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(KokoSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: KokoColors.canvasSoft,
+                borderRadius: KokoRadius.lgBorder,
+                border: Border.all(color: KokoColors.hairline),
+              ),
+              child: controller.isScanning
+                  ? const Padding(
+                      padding: EdgeInsets.all(22),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: KokoColors.ink,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.check_rounded,
+                      size: 36,
                       color: KokoColors.ink,
                     ),
-                  )
-                : const Icon(
-                    Icons.check_rounded,
-                    size: 36,
-                    color: KokoColors.ink,
-                  ),
-          ),
-          const SizedBox(height: KokoSpacing.xxl),
-          Text(
-            controller.isScanning ? 'Indexing screenshots' : 'Ready to go',
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w500,
-              letterSpacing: -0.4,
-              color: KokoColors.ink,
             ),
-          ),
-          const SizedBox(height: KokoSpacing.lg),
-          Text(
-            controller.statusText,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14, color: KokoColors.body),
-          ),
-          const SizedBox(height: KokoSpacing.xl),
-          if (controller.screenshots.isNotEmpty) ...[
-            ClipRRect(
-              borderRadius: KokoRadius.smBorder,
-              child: LinearProgressIndicator(
-                minHeight: 4,
-                value: controller.processedCount == 0
-                    ? null
-                    : controller.processedCount / controller.screenshots.length,
-                backgroundColor: KokoColors.canvasSoft,
-                valueColor: const AlwaysStoppedAnimation(KokoColors.ink),
+            const SizedBox(height: KokoSpacing.xxl),
+            Text(
+              controller.isScanning ? 'Indexing screenshots' : 'Ready to go',
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.4,
+                color: KokoColors.ink,
               ),
             ),
-            const SizedBox(height: KokoSpacing.sm),
+            const SizedBox(height: KokoSpacing.lg),
             Text(
-              '${controller.screenshots.length} found · ${controller.processedCount} analyzed',
-              style: const TextStyle(fontSize: 12, color: KokoColors.mute),
+              controller.statusText,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14, color: KokoColors.body),
+            ),
+            const SizedBox(height: KokoSpacing.xl),
+            if (controller.screenshots.isNotEmpty) ...[
+              ClipRRect(
+                borderRadius: KokoRadius.smBorder,
+                child: LinearProgressIndicator(
+                  minHeight: 4,
+                  value: controller.processedCount == 0
+                      ? null
+                      : controller.processedCount / controller.screenshots.length,
+                  backgroundColor: KokoColors.canvasSoft,
+                  valueColor: const AlwaysStoppedAnimation(KokoColors.ink),
+                ),
+              ),
+              const SizedBox(height: KokoSpacing.sm),
+              Text(
+                '${controller.screenshots.length} found · ${controller.processedCount} analyzed',
+                style: const TextStyle(fontSize: 12, color: KokoColors.mute),
+              ),
+            ],
+            const SizedBox(height: KokoSpacing.xxxl),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: onComplete,
+                child: const Text('Continue'),
+              ),
             ),
           ],
-          const SizedBox(height: KokoSpacing.xxxl),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: onComplete,
-              child: const Text('Continue'),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

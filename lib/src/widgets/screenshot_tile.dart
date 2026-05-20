@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -71,20 +72,26 @@ class _ThumbnailLoaderState extends State<_ThumbnailLoader> {
 
   Future<void> _load() async {
     final asset = await AssetEntity.fromId(widget.item.assetId);
-    if (asset == null) {
-      if (mounted) setState(() => _failed = true);
-      return;
-    }
-    final bytes = await asset.thumbnailDataWithSize(
-      const ThumbnailSize.square(420),
-      quality: 82,
-    );
+    final bytes =
+        await asset?.thumbnailDataWithSize(
+          const ThumbnailSize.square(420),
+          quality: 82,
+        ) ??
+        await _fileBytes();
     if (mounted) {
       setState(() {
         _bytes = bytes;
         if (bytes == null) _failed = true;
       });
     }
+  }
+
+  Future<Uint8List?> _fileBytes() async {
+    final path = widget.item.filePath;
+    if (path.isEmpty) return null;
+    final file = File(path);
+    if (!await file.exists()) return null;
+    return file.readAsBytes();
   }
 
   @override

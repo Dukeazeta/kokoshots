@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -55,8 +56,7 @@ class _ScreenshotViewerState extends State<ScreenshotViewer> {
             child: PageView.builder(
               controller: _pageController,
               itemCount: widget.items.length,
-              onPageChanged: (index) =>
-                  setState(() => _currentIndex = index),
+              onPageChanged: (index) => setState(() => _currentIndex = index),
               itemBuilder: (context, index) {
                 return _ZoomableImage(
                   item: widget.items[index],
@@ -92,10 +92,7 @@ class _ScreenshotViewerState extends State<ScreenshotViewer> {
 // ── Zoomable image page ──
 
 class _ZoomableImage extends StatefulWidget {
-  const _ZoomableImage({
-    required this.item,
-    required this.isHero,
-  });
+  const _ZoomableImage({required this.item, required this.isHero});
 
   final ScreenshotItem item;
   final bool isHero;
@@ -116,21 +113,27 @@ class _ZoomableImageState extends State<_ZoomableImage> {
 
   Future<void> _loadImage() async {
     final asset = await AssetEntity.fromId(widget.item.assetId);
-    if (asset == null) {
-      if (mounted) setState(() => _loading = false);
-      return;
-    }
     // Load a high-res version for the viewer
-    final bytes = await asset.thumbnailDataWithSize(
-      const ThumbnailSize(1080, 1920),
-      quality: 92,
-    );
+    final bytes =
+        await asset?.thumbnailDataWithSize(
+          const ThumbnailSize(1080, 1920),
+          quality: 92,
+        ) ??
+        await _fileBytes();
     if (mounted) {
       setState(() {
         _fullBytes = bytes;
         _loading = false;
       });
     }
+  }
+
+  Future<Uint8List?> _fileBytes() async {
+    final path = widget.item.filePath;
+    if (path.isEmpty) return null;
+    final file = File(path);
+    if (!await file.exists()) return null;
+    return file.readAsBytes();
   }
 
   @override
@@ -161,19 +164,11 @@ class _ZoomableImageState extends State<_ZoomableImage> {
     final imageWidget = InteractiveViewer(
       minScale: 1.0,
       maxScale: 5.0,
-      child: Center(
-        child: Image.memory(
-          _fullBytes!,
-          fit: BoxFit.contain,
-        ),
-      ),
+      child: Center(child: Image.memory(_fullBytes!, fit: BoxFit.contain)),
     );
 
     if (widget.isHero) {
-      return Hero(
-        tag: 'screenshot_${widget.item.assetId}',
-        child: imageWidget,
-      );
+      return Hero(tag: 'screenshot_${widget.item.assetId}', child: imageWidget);
     }
     return imageWidget;
   }
@@ -202,16 +197,16 @@ class _TopOverlay extends StatelessWidget {
       right: 0,
       child: Container(
         padding: EdgeInsets.fromLTRB(
-          KokoSpacing.sm, topPadding + KokoSpacing.sm, KokoSpacing.xl, KokoSpacing.lg,
+          KokoSpacing.sm,
+          topPadding + KokoSpacing.sm,
+          KokoSpacing.xl,
+          KokoSpacing.lg,
         ),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xCC000000),
-              Color(0x00000000),
-            ],
+            colors: [Color(0xCC000000), Color(0x00000000)],
           ),
         ),
         child: Row(
@@ -269,16 +264,16 @@ class _BottomOverlay extends StatelessWidget {
       right: 0,
       child: Container(
         padding: EdgeInsets.fromLTRB(
-          KokoSpacing.xl, KokoSpacing.xxl, KokoSpacing.xl, bottomPadding + KokoSpacing.xl,
+          KokoSpacing.xl,
+          KokoSpacing.xxl,
+          KokoSpacing.xl,
+          bottomPadding + KokoSpacing.xl,
         ),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.bottomCenter,
             end: Alignment.topCenter,
-            colors: [
-              Color(0xCC000000),
-              Color(0x00000000),
-            ],
+            colors: [Color(0xCC000000), Color(0x00000000)],
           ),
         ),
         child: Column(
@@ -301,10 +296,7 @@ class _BottomOverlay extends StatelessWidget {
             // Date
             Text(
               DateFormat.yMMMd().add_jm().format(item.dateTaken),
-              style: const TextStyle(
-                fontSize: 13,
-                color: KokoColors.body,
-              ),
+              style: const TextStyle(fontSize: 13, color: KokoColors.body),
             ),
             if (item.tags.isNotEmpty) ...[
               const SizedBox(height: KokoSpacing.lg),
@@ -328,7 +320,7 @@ class _BottomOverlay extends StatelessWidget {
                     child: Text(
                       tag,
                       style: const TextStyle(
-                              fontSize: 12,
+                        fontSize: 12,
                         color: KokoColors.bodyStrong,
                       ),
                     ),
